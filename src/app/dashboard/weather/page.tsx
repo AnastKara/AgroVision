@@ -9,11 +9,14 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import WeatherAlerts from "@/components/weather-alerts";
 import {
-  fetchWeatherData,
+  fetchWeatherWithSoil,
+  fetchSatelliteData,
   getWeatherIconUrl,
   getTemperatureColor,
   getWindDirection,
   WeatherData,
+  SoilData,
+  SatelliteIndex,
   mockWeatherData,
 } from "@/lib/weather-service";
 import {
@@ -26,13 +29,17 @@ import {
   Cloud,
   Eye,
   Gauge,
-  MapPin,
-  Clock,
   TrendingUp,
   TrendingDown,
   AlertTriangle,
   CloudSun,
   CloudSnow,
+  Sprout,
+  Mountain,
+  Activity,
+  LineChart,
+  TreePine,
+  Info,
 } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,8 +63,34 @@ const weatherColors: Record<string, string> = {
   Foggy: "from-gray-300 to-gray-500",
 };
 
+function getNDVIColor(value: number | null): string {
+  if (value === null) return "text-muted-foreground";
+  if (value >= 0.6) return "text-green-500";
+  if (value >= 0.4) return "text-yellow-500";
+  if (value >= 0.2) return "text-orange-500";
+  return "text-red-500";
+}
+
+function getNDVILabel(value: number | null): string {
+  if (value === null) return "No Data";
+  if (value >= 0.6) return "Dense Vegetation";
+  if (value >= 0.4) return "Moderate Vegetation";
+  if (value >= 0.2) return "Sparse Vegetation";
+  return "Barren";
+}
+
+function getSoilMoistureColor(value: number | null): string {
+  if (value === null) return "bg-muted";
+  if (value >= 60) return "bg-blue-500";
+  if (value >= 35) return "bg-green-500";
+  if (value >= 20) return "bg-yellow-500";
+  return "bg-red-500";
+}
+
 export default function WeatherPage() {
   const [weather, setWeather] = useState<WeatherData>(mockWeatherData);
+  const [soilData, setSoilData] = useState<SoilData | null>(null);
+  const [satelliteData, setSatelliteData] = useState<SatelliteIndex | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,9 +102,15 @@ export default function WeatherPage() {
       else setLoading(true);
       setError(null);
 
-      const { data, isLive: live } = await fetchWeatherData();
-      setWeather(data);
+      // Fetch weather with soil data from AgroMonitoring
+      const { data: weatherResult, isLive: live } = await fetchWeatherWithSoil();
+      setWeather(weatherResult);
+      setSoilData(weatherResult.soil ?? null);
       setIsLive(live);
+
+      // Fetch satellite vegetation indices separately
+      const satResult = await fetchSatelliteData();
+      setSatelliteData(satResult);
     } catch (err) {
       setError("Failed to load weather data");
       console.error(err);
@@ -87,6 +126,8 @@ export default function WeatherPage() {
   const current = weather.current;
   const forecast = weather.forecast;
   const advisory = weather.advisory;
+  const soil = weather.soil ?? soilData;
+  const satellite = satelliteData;
 
   const ConditionIcon = weatherConditionIcons[current.condition] || Sun;
 
@@ -100,16 +141,16 @@ export default function WeatherPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Weather</h1>
+            <h1 className="text-3xl font-bold">Weather &amp; Crop Monitor</h1>
             <Badge
               variant={isLive ? "success" : "secondary"}
               className="text-[10px]"
             >
-              {isLive ? "Live" : "Demo Data"}
+              {isLive ? "AgroMonitoring Live" : "Demo Data"}
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">
-            Real-time weather data and crop-specific advisories for your farm
+            Real-time weather, soil moisture, and satellite vegetation indices powered by AgroMonitoring
           </p>
         </div>
         <Button
@@ -158,21 +199,9 @@ export default function WeatherPage() {
               {/* Right: Quick stats */}
               <div className="flex flex-wrap gap-3">
                 {[
-                  {
-                    label: "Humidity",
-                    value: `${current.humidity}%`,
-                    icon: Droplets,
-                  },
-                  {
-                    label: "Rain",
-                    value: `${current.rain}%`,
-                    icon: CloudRain,
-                  },
-                  {
-                    label: "Wind",
-                    value: `${current.wind} km/h`,
-                    icon: Wind,
-                  },
+                  { label: "Humidity", value: `${current.humidity}%`, icon: Droplets },
+                  { label: "Rain", value: `${current.rain}%`, icon: CloudRain },
+                  { label: "Wind", value: `${current.wind} km/h`, icon: Wind },
                 ].map((stat, i) => (
                   <div
                     key={i}
@@ -189,35 +218,13 @@ export default function WeatherPage() {
           <CardContent className="p-6">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                {
-                  label: "UV Index",
-                  value: current.uvIndex > 0 ? `${current.uvIndex}` : "N/A",
-                  icon: Sun,
-                  color: "text-yellow-500",
-                },
-                {
-                  label: "Wind Direction",
-                  value: getWindDirection(12),
-                  icon: Wind,
-                  color: "text-blue-500",
-                },
-                {
-                  label: "Visibility",
-                  value: ">10 km",
-                  icon: Eye,
-                  color: "text-green-500",
-                },
-                {
-                  label: "Pressure",
-                  value: "1013 hPa",
-                  icon: Gauge,
-                  color: "text-purple-500",
-                },
+                { label: "UV Index", value: current.uvIndex > 0 ? `${current.uvIndex}` : "N/A", icon: Sun, color: "text-yellow-500" },
+                { label: "Wind Direction", value: getWindDirection(12), icon: Wind, color: "text-blue-500" },
+                { label: "Visibility", value: ">10 km", icon: Eye, color: "text-green-500" },
+                { label: "Pressure", value: "1013 hPa", icon: Gauge, color: "text-purple-500" },
               ].map((stat, i) => (
                 <div key={i} className="glass rounded-2xl p-4 flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-xl ${stat.color} bg-current/10 flex items-center justify-center`}
-                  >
+                  <div className={`w-10 h-10 rounded-xl ${stat.color} bg-current/10 flex items-center justify-center`}>
                     <stat.icon size={18} />
                   </div>
                   <div>
@@ -227,6 +234,177 @@ export default function WeatherPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* AgroMonitoring Data Row: Soil Moisture + Satellite NDVI */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="grid lg:grid-cols-2 gap-6"
+      >
+        {/* Soil Moisture Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Sprout size={16} className="text-emerald-500" />
+              Soil Moisture (AgroMonitoring)
+              {soil && !isLive && (
+                <Badge variant="secondary" className="text-[8px] ml-auto">Demo</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {soil ? (
+              <div className="space-y-4">
+                {/* Main soil moisture gauge */}
+                <div className="glass rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Surface Moisture</span>
+                    <span className="text-lg font-bold">
+                      {soil.moisture !== null ? `${Math.round(soil.moisture)}%` : "N/A"}
+                    </span>
+                  </div>
+                  <Progress
+                    value={soil.moisture ?? 0}
+                    className="h-2.5"
+variant={
+                        soil.moisture !== null && soil.moisture > 60
+                          ? "success"
+                          : soil.moisture !== null && soil.moisture < 20
+                          ? "danger"
+                          : "default"
+                      }
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Dry</span>
+                    <span>Optimal</span>
+                    <span>Wet</span>
+                  </div>
+                </div>
+
+                {/* Depth profile */}
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">Moisture by Depth</h4>
+                  <div className="space-y-2">
+                    {[
+                      { label: "10cm", value: soil.moisture10 },
+                      { label: "20cm", value: soil.moisture20 },
+                      { label: "40cm", value: soil.moisture40 },
+                      { label: "60cm", value: soil.moisture60 },
+                      { label: "100cm", value: soil.moisture100 },
+                    ].map((layer) => (
+                      <div key={layer.label} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-10">{layer.label}</span>
+                        <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${getSoilMoistureColor(layer.value)}`}
+                            style={{ width: `${layer.value ?? 0}%` }}
+                          />
+                        </div>
+                        <span className="text-xs w-10 text-right text-muted-foreground">
+                          {layer.value !== null ? `${Math.round(layer.value)}%` : "N/A"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Surface temp */}
+                {soil.surfaceTemp !== null && (
+                  <div className="glass rounded-xl px-4 py-3 flex items-center gap-3">
+                    <Thermometer size={16} className="text-orange-500" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Surface Temperature</p>
+                      <p className="text-sm font-semibold">{Math.round(soil.surfaceTemp)}°C</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Mountain size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Soil moisture data available when</p>
+                <p className="text-sm">AgroMonitoring API is connected</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Satellite Vegetation Indices Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <TreePine size={16} className="text-green-500" />
+              Vegetation Indices (Satellite)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {satellite && satellite.ndvi !== null ? (
+              <div className="space-y-4">
+                {/* NDVI Gauge */}
+                <div className="glass rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">NDVI</span>
+                    <span className={`text-lg font-bold ${getNDVIColor(satellite.ndvi)}`}>
+                      {satellite.ndvi.toFixed(2)}
+                    </span>
+                  </div>
+                  <Progress
+                    value={((satellite.ndvi + 1) / 2) * 100}
+                    className="h-2.5"
+                    variant="default"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>Barren (-1)</span>
+                    <span>Dense (1)</span>
+                  </div>
+                </div>
+
+                {/* Status label */}
+                <div className="glass rounded-xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Activity size={16} className={getNDVIColor(satellite.ndvi)} />
+                    <span className="text-sm font-medium">{getNDVILabel(satellite.ndvi)}</span>
+                  </div>
+                </div>
+
+                {/* EVI + NDMI */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="glass rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground mb-1">EVI</p>
+                    <p className={`text-sm font-bold ${getNDVIColor(satellite.evi)}`}>
+                      {satellite.evi !== null ? satellite.evi.toFixed(2) : "N/A"}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">Enhanced VI</p>
+                  </div>
+                  <div className="glass rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-muted-foreground mb-1">NDMI</p>
+                    <p className={`text-sm font-bold ${getNDVIColor(satellite.ndmi)}`}>
+                      {satellite.ndmi !== null ? satellite.ndmi.toFixed(2) : "N/A"}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground">Moisture Index</p>
+                  </div>
+                </div>
+
+                {/* Data freshness */}
+                {satellite.date && (
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <Info size={10} />
+                    <span>Last satellite pass: {new Date(satellite.date).toLocaleDateString()}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <LineChart size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Satellite vegetation data</p>
+                <p className="text-sm">available when AgroMonitoring</p>
+                <p className="text-sm">API is connected</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -322,12 +500,8 @@ export default function WeatherPage() {
 
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="text-xs font-medium w-8 text-right">
-                      {day.day}
-                    </span>
-                    <span className="text-[10px] text-blue-500 w-6 text-right">
-                      {day.tempMin}°
-                    </span>
+                    <span className="text-xs font-medium w-8 text-right">{day.day}</span>
+                    <span className="text-[10px] text-blue-500 w-6 text-right">{day.tempMin}°</span>
                     <div className="flex-1 h-2 rounded-full bg-muted relative overflow-hidden">
                       <div
                         className="absolute h-full rounded-full bg-gradient-to-r from-blue-500 via-green-500 to-red-500"
@@ -337,9 +511,7 @@ export default function WeatherPage() {
                         }}
                       />
                     </div>
-                    <span className="text-[10px] text-red-500 w-6">
-                      {day.tempMax}°
-                    </span>
+                    <span className="text-[10px] text-red-500 w-6">{day.tempMax}°</span>
                   </div>
                 );
               })}
@@ -366,20 +538,13 @@ export default function WeatherPage() {
                 {forecast.slice(0, 7).map((day, i) => {
                   const height = Math.max(day.rain, 5);
                   return (
-                    <div
-                      key={i}
-                      className="flex-1 flex flex-col items-center gap-1"
-                    >
-                      <span className="text-[10px] text-muted-foreground">
-                        {day.rain}%
-                      </span>
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">{day.rain}%</span>
                       <div
                         className="w-full rounded-full bg-gradient-to-t from-blue-500 to-blue-400 transition-all"
                         style={{ height: `${height * 0.8}px` }}
                       />
-                      <span className="text-[10px] text-muted-foreground">
-                        {day.day}
-                      </span>
+                      <span className="text-[10px] text-muted-foreground">{day.day}</span>
                     </div>
                   );
                 })}
@@ -390,29 +555,18 @@ export default function WeatherPage() {
             <div className="glass rounded-2xl p-4">
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <Wind size={14} className="text-blue-500" />
-                Wind & Humidity Summary
+                Wind &amp; Humidity Summary
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-muted-foreground">Avg Wind</span>
                     <span className="font-medium">
-                      {Math.round(
-                        forecast.reduce((a, d) => a + d.wind, 0) /
-                          forecast.length
-                      )}{" "}
-                      km/h
+                      {Math.round(forecast.reduce((a, d) => a + d.wind, 0) / forecast.length)} km/h
                     </span>
                   </div>
                   <Progress
-                    value={
-                      (Math.round(
-                        forecast.reduce((a, d) => a + d.wind, 0) /
-                          forecast.length
-                      ) /
-                        50) *
-                      100
-                    }
+                    value={(Math.round(forecast.reduce((a, d) => a + d.wind, 0) / forecast.length) / 50) * 100}
                     variant="default"
                   />
                 </div>
@@ -420,20 +574,11 @@ export default function WeatherPage() {
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-muted-foreground">Avg Humidity</span>
                     <span className="font-medium">
-                      {Math.round(
-                        forecast.reduce((a, d) => a + d.humidity, 0) /
-                          forecast.length
-                      )}
-                      %
+                      {Math.round(forecast.reduce((a, d) => a + d.humidity, 0) / forecast.length)}%
                     </span>
                   </div>
                   <Progress
-                    value={
-                      Math.round(
-                        forecast.reduce((a, d) => a + d.humidity, 0) /
-                          forecast.length
-                      )
-                    }
+                    value={Math.round(forecast.reduce((a, d) => a + d.humidity, 0) / forecast.length)}
                     variant="default"
                   />
                 </div>
@@ -495,4 +640,3 @@ function CalendarIcon() {
     </svg>
   );
 }
-

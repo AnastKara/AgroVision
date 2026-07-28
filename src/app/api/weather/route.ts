@@ -1,4 +1,117 @@
 import { NextResponse } from "next/server";
+import {
+  getWeather,
+  getSoilMoisture,
+  transformAMWeatherToAppFormat,
+} from "@/lib/agromonitoring-service";
+
+/**
+ * GET /api/weather
+ *
+ * Primary: AgroMonitoring API (agriculture-optimized weather + soil data)
+ * Fallback: OpenWeatherMap (standard weather data)
+ *
+ * Query params:
+ *   - lat: latitude (default: from env DEFAULT_FARM_LAT)
+ *   - lon: longitude (default: from env DEFAULT_FARM_LON)
+ *   - include: comma-separated: "soil" to include soil moisture data
+ */
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const lat = searchParams.get("lat") || process.env.DEFAULT_FARM_LAT || "40.7128";
+  const lon = searchParams.get("lon") || process.env.DEFAULT_FARM_LON || "-74.006";
+  const include = searchParams.get("include") || "";
+
+  const agroApiKey = process.env.AGROMONITORING_API_KEY;
+
+  // -------------------------------------------------------
+  // PRIMARY: Try AgroMonitoring API
+  // -------------------------------------------------------
+  if (agroApiKey) {
+    try {
+      // Fetch weather data from AgroMonitoring
+      const weatherPromise = getWeather(lat, lon);
+
+      // Fetch soil moisture if requested
+      let soilPromise = null;
+      if (include.includes("soil")) {
+        soilPromise = getSoilMoisture(lat, lon).catch(() => null);
+      }
+
+      const [weatherData, soilData] = await Promise.all([
+        weatherPromise,
+        soilPromise,
+      ]);
+
+      const result = transformAMWeatherToAppFormat(weatherData, soilData || undefined);
+
+      return NextResponse.json(result);
+    } catch (agroError) {
+      console.warn("AgroMonitoring API failed, falling back to OpenWeatherMap:", agroError);
+      // Fall through to OpenWeatherMap fallback
+    }
+  }
+
+  // -------------------------------------------------------
+  // FALLBACK: OpenWeatherMap (existing implementation)
+  // -------------------------------------------------------
+  const owmApiKey = process.env.OPENWEATHER_API_KEY;
+
+  if (!owmApiKey) {
+    return NextResponse.json(
+      { error: "No weather API key configured" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    // Try One Call API 3.0 first
+    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric&exclude=minutely,hourly,alerts`;
+    const response = await fetch(url);
+
+    // If OneCall 3.0 fails (401/403), fall back to 2.5 endpoints
+    if (response.status === 401 || response.status === 403) {
+      const [currentRes, forecastRes] = await Promise.all([
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
+        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
+      ]);
+
+      if (!currentRes.ok) {
+        return NextResponse.json(
+          { error: "Weather API request failed", status: currentRes.status },
+          { status: currentRes.status }
+        );
+      }
+
+      const currentData = await currentRes.json();
+      const forecastData = await forecastRes.json();
+      const daily = processForecastData(forecastData);
+
+      const weather = buildOpenWeatherResponse(currentData, daily);
+      return NextResponse.json(formatWeatherData(weather));
+    }
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "Weather API request failed", status: response.status },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(formatWeatherData(data));
+  } catch (error) {
+    console.error("Weather API error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch weather data" },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================
+// OpenWeatherMap types
+// ============================================================
 
 interface OpenWeatherCurrent {
   dt: number;
@@ -44,6 +157,10 @@ interface DailyAccumulator {
   pop: number;
   rain?: number;
 }
+
+// ============================================================
+// OpenWeatherMap helpers (keep existing implementation)
+// ============================================================
 
 function getWeatherCondition(id: number): string {
   if (id >= 200 && id < 300) return "Stormy";
@@ -237,78 +354,25 @@ function processForecastData(forecastData: {
   return Array.from(dailyMap.values()).slice(0, 7);
 }
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const lat = searchParams.get("lat") || process.env.DEFAULT_FARM_LAT || "40.7128";
-  const lon = searchParams.get("lon") || process.env.DEFAULT_FARM_LON || "-74.006";
-  const apiKey = process.env.OPENWEATHER_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "OpenWeatherMap API key not configured" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    // Try One Call API 3.0 first
-    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&exclude=minutely,hourly,alerts`;
-    const response = await fetch(url);
-
-    // If OneCall 3.0 fails (401/403), fall back to 2.5 endpoints
-    if (response.status === 401 || response.status === 403) {
-      const [currentRes, forecastRes] = await Promise.all([
-        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`),
-        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`),
-      ]);
-
-      if (!currentRes.ok) {
-        return NextResponse.json(
-          { error: "Weather API request failed", status: currentRes.status },
-          { status: currentRes.status }
-        );
-      }
-
-      const currentData = await currentRes.json();
-      const forecastData = await forecastRes.json();
-      const daily = processForecastData(forecastData);
-
-      const weather: OpenWeatherResponse = {
-        lat: currentData.coord.lat,
-        lon: currentData.coord.lon,
-        timezone: currentData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timezone_offset: 0,
-        current: {
-          dt: currentData.dt,
-          temp: currentData.main.temp,
-          feels_like: currentData.main.feels_like,
-          humidity: currentData.main.humidity,
-          wind_speed: currentData.wind.speed,
-          wind_deg: currentData.wind.deg,
-          weather: currentData.weather,
-          pop: 0,
-        },
-        daily,
-      };
-
-      return NextResponse.json(formatWeatherData(weather));
-    }
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Weather API request failed", status: response.status },
-        { status: response.status }
-      );
-    }
-
-    const data: OpenWeatherResponse = await response.json();
-    return NextResponse.json(formatWeatherData(data));
-  } catch (error) {
-    console.error("Weather API error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch weather data" },
-      { status: 500 }
-    );
-  }
+function buildOpenWeatherResponse(
+  currentData: { coord: { lat: number; lon: number }; main: { temp: number; feels_like: number; humidity: number }; wind: { speed: number; deg: number }; weather: { id: number; main: string; description: string; icon: string }[]; dt: number; timezone?: string },
+  daily: DailyAccumulator[]
+): OpenWeatherResponse {
+  return {
+    lat: currentData.coord.lat,
+    lon: currentData.coord.lon,
+    timezone: currentData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezone_offset: 0,
+    current: {
+      dt: currentData.dt,
+      temp: currentData.main.temp,
+      feels_like: currentData.main.feels_like,
+      humidity: currentData.main.humidity,
+      wind_speed: currentData.wind.speed,
+      wind_deg: currentData.wind.deg,
+      weather: currentData.weather,
+      pop: 0,
+    },
+    daily,
+  };
 }
-

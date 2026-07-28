@@ -30,6 +30,25 @@ export interface WeatherAdvisory {
   message: string;
 }
 
+// AgroMonitoring-specific types (soil moisture, satellite data)
+export interface SoilData {
+  moisture: number | null;
+  moisture10: number | null;    // 10cm depth
+  moisture20: number | null;    // 20cm depth
+  moisture40: number | null;    // 40cm depth
+  moisture60: number | null;    // 60cm depth
+  moisture100: number | null;   // 100cm depth
+  surfaceTemp: number | null;
+}
+
+export interface SatelliteIndex {
+  ndvi: number | null;   // Normalized Difference Vegetation Index
+  evi: number | null;    // Enhanced Vegetation Index
+  ndmi: number | null;   // Normalized Difference Moisture Index
+  imageUrl: string | null;
+  date: string | null;
+}
+
 export interface WeatherData {
   current: WeatherCurrent;
   forecast: WeatherForecast[];
@@ -39,6 +58,9 @@ export interface WeatherData {
     lon: number;
     timezone: string;
   };
+  // Extended agro data from AgroMonitoring
+  soil?: SoilData | null;
+  satellite?: SatelliteIndex | null;
 }
 
 // Mock weather data as fallback
@@ -115,6 +137,73 @@ export async function fetchWeatherData(
   } catch (error) {
     console.warn("Failed to fetch weather data, using mock data:", error);
     return { data: mockWeatherData, isLive: false };
+  }
+}
+
+/**
+ * Fetch weather data with soil moisture included (from AgroMonitoring via API route)
+ */
+export async function fetchWeatherWithSoil(
+  lat?: number,
+  lon?: number
+): Promise<{ data: WeatherData; isLive: boolean }> {
+  try {
+    const params = new URLSearchParams();
+    if (lat) params.set("lat", lat.toString());
+    if (lon) params.set("lon", lon.toString());
+    params.set("include", "soil");
+
+    const response = await fetch(`/api/weather?${params.toString()}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.warn("Weather+soil API returned error:", response.statusText);
+      return { data: mockWeatherData, isLive: false };
+    }
+
+    const data: WeatherData = await response.json();
+    return { data, isLive: true };
+  } catch (error) {
+    console.warn("Failed to fetch weather+soil data:", error);
+    return { data: mockWeatherData, isLive: false };
+  }
+}
+
+/**
+ * Fetch satellite vegetation index data (NDVI, EVI) from AgroMonitoring
+ */
+export async function fetchSatelliteData(
+  lat?: number,
+  lon?: number,
+  days?: number
+): Promise<SatelliteIndex> {
+  try {
+    const params = new URLSearchParams();
+    if (lat) params.set("lat", lat.toString());
+    if (lon) params.set("lon", lon.toString());
+    if (days) params.set("days", days.toString());
+
+    const response = await fetch(`/api/weather/satellite?${params.toString()}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.warn("Satellite API returned error:", response.statusText);
+      return { ndvi: null, evi: null, ndmi: null, imageUrl: null, date: null };
+    }
+
+    const data = await response.json();
+    return {
+      ndvi: data.ndvi ?? null,
+      evi: data.evi ?? null,
+      ndmi: data.ndmi ?? null,
+      imageUrl: data.imageUrl ?? null,
+      date: data.date ?? null,
+    };
+  } catch (error) {
+    console.warn("Failed to fetch satellite data:", error);
+    return { ndvi: null, evi: null, ndmi: null, imageUrl: null, date: null };
   }
 }
 
