@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/supabase/auth-provider";
 import {
   LayoutDashboard,
   Map,
@@ -45,6 +46,11 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { signOut, isConfigured } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+  };
 
   const sidebarVariants = {
     expanded: { width: 260 },
@@ -161,7 +167,10 @@ export default function Sidebar() {
           })}
 
           {/* Logout */}
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+          >
             <LogOut size={20} />
             {!collapsed && <span className="text-sm font-medium">Logout</span>}
           </button>

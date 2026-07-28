@@ -6,16 +6,35 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sprout, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/lib/supabase/auth-provider";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { signUp, isConfigured } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    window.location.href = "/dashboard";
+    setError(null);
+    setLoading(true);
+
+    // If Supabase is not configured, just redirect to dashboard (dev mode)
+    if (!isConfigured) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
+    const { error } = await signUp(email, password, name);
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      window.location.href = "/dashboard";
+    }
   };
 
   return (
@@ -112,6 +131,12 @@ export default function RegisterPage() {
                 Must be at least 8 characters
               </p>
             </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
             <Button type="submit" className="w-full" size="lg">
               Create Account

@@ -6,16 +6,27 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sprout, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/lib/supabase/auth-provider";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to dashboard
-    window.location.href = "/dashboard";
+    setError(null);
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+    if (error) {
+      setError(error.message);
+    } else {
+      window.location.href = "/dashboard";
+    }
   };
 
   return (
@@ -80,6 +91,12 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm">
