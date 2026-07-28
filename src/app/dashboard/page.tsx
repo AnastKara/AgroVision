@@ -110,8 +110,8 @@ export default function DashboardPage() {
       >
         {[
           { label: "Total Fields", value: totalFields, icon: Map, change: "+2 this month", color: "from-emerald-400 to-green-500" },
-          { label: "Total Area", value: `${totalArea} ha`, icon: Map, change: "Across ${totalFields} fields", color: "from-blue-400 to-indigo-500" },
-          { label: "Farm Health", value: `${avgHealth}%`, icon: Activity, change: "${avgHealth > 70 ? '+5%' : '-3%'} vs last month", color: avgHealth > 70 ? "from-green-400 to-emerald-500" : "from-yellow-400 to-orange-500" },
+          { label: "Total Area", value: `${totalArea} ha`, icon: Map, change: `Across ${totalFields} fields`, color: "from-blue-400 to-indigo-500" },
+          { label: "Farm Health", value: `${avgHealth}%`, icon: Activity, change: `${avgHealth > 70 ? '+5%' : '-3%'} vs last month`, color: avgHealth > 70 ? "from-green-400 to-emerald-500" : "from-yellow-400 to-orange-500" },
           { label: "Est. Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, change: "+15% vs forecast", color: "from-purple-400 to-pink-500" },
         ].map((stat, i) => (
           <Card key={i} className="hover:shadow-lg transition-all duration-300">

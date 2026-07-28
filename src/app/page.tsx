@@ -549,7 +549,7 @@ export default function LandingPage() {
                     <Star key={j} size={16} className="fill-yellow-500 text-yellow-500" />
                   ))}
                 </div>
-                <p className="text-muted-foreground mb-6 leading-relaxed italic">"{testimonial.content}"</p>
+                <p className="text-muted-foreground mb-6 leading-relaxed italic">&quot;{testimonial.content}&quot;</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm">
                     {testimonial.name.split(" ").map(n => n[0]).join("")}
