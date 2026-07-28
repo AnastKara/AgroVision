@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +32,10 @@ import {
   Cloud,
   CloudRain,
   Wind,
+  RefreshCw,
 } from "lucide-react";
-import { fields, tasks, transactions, notifications, weatherData, analyticsData } from "@/lib/data";
+import { fields, tasks, transactions, notifications, weatherData as mockWeatherData, analyticsData } from "@/lib/data";
+import { fetchWeatherData, WeatherData } from "@/lib/weather-service";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -74,6 +77,33 @@ const taskTypeIcons: Record<string, any> = {
 };
 
 export default function DashboardPage() {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+
+  const loadWeatherData = useCallback(async () => {
+    try {
+      setWeatherLoading(true);
+      const { data } = await fetchWeatherData();
+      setWeatherData(data);
+    } catch {
+      // Fallback to mock data silently
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadWeatherData();
+  }, [loadWeatherData]);
+
+  // Use live data if available, otherwise fall back to mock
+  const displayWeather = weatherData || {
+    current: mockWeatherData.current,
+    forecast: mockWeatherData.forecast,
+    advisory: mockWeatherData.forecast[0]?.condition ? { type: "info" as const, message: "" } : { type: "info" as const, message: "" },
+    location: { lat: 0, lon: 0, timezone: "" },
+  };
+
   const totalFields = fields.length;
   const totalArea = fields.reduce((acc, f) => acc + f.area, 0);
   const avgHealth = Math.round(fields.reduce((acc, f) => acc + f.health, 0) / fields.length);
@@ -231,37 +261,37 @@ export default function DashboardPage() {
                 <Sun size={32} className="text-white" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{weatherData.current.temperature}°C</p>
-                <p className="text-sm text-muted-foreground">{weatherData.current.condition}</p>
+                <p className="text-3xl font-bold">{displayWeather.current.temperature}°C</p>
+                <p className="text-sm text-muted-foreground">{displayWeather.current.condition}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="glass rounded-xl p-3 text-center">
                 <Droplets size={16} className="mx-auto mb-1 text-blue-500" />
                 <p className="text-xs text-muted-foreground">Humidity</p>
-                <p className="font-semibold">{weatherData.current.humidity}%</p>
+                <p className="font-semibold">{displayWeather.current.humidity}%</p>
               </div>
               <div className="glass rounded-xl p-3 text-center">
                 <CloudRain size={16} className="mx-auto mb-1 text-blue-500" />
                 <p className="text-xs text-muted-foreground">Rain</p>
-                <p className="font-semibold">{weatherData.current.rain}%</p>
+                <p className="font-semibold">{displayWeather.current.rain}%</p>
               </div>
               <div className="glass rounded-xl p-3 text-center">
                 <Wind size={16} className="mx-auto mb-1 text-blue-500" />
                 <p className="text-xs text-muted-foreground">Wind</p>
-                <p className="font-semibold">{weatherData.current.wind} km/h</p>
+                <p className="font-semibold">{displayWeather.current.wind} km/h</p>
               </div>
               <div className="glass rounded-xl p-3 text-center">
                 <Thermometer size={16} className="mx-auto mb-1 text-blue-500" />
                 <p className="text-xs text-muted-foreground">Feels Like</p>
-                <p className="font-semibold">{weatherData.current.temperature - 2}°C</p>
+                <p className="font-semibold">{displayWeather.current.temperature - 2}°C</p>
               </div>
             </div>
             {/* Forecast */}
             <div className="mt-4">
               <p className="text-xs font-medium text-muted-foreground mb-3">7-Day Forecast</p>
               <div className="flex justify-between">
-                {weatherData.forecast.slice(0, 5).map((day, i) => {
+                {displayWeather.forecast.slice(0, 5).map((day, i) => {
                   const Icon = weatherIcons[day.condition] || Cloud;
                   return (
                     <div key={i} className="text-center">

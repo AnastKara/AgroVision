@@ -23,11 +23,13 @@ import {
   LogOut,
   Menu,
   X,
+  Cloud,
 } from "lucide-react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Map, label: "Farm Map", href: "/dashboard/farm-map" },
+  { icon: Cloud, label: "Weather", href: "/dashboard/weather" },
   { icon: Sprout, label: "Fields", href: "/dashboard/fields" },
   { icon: PawPrint, label: "Animals", href: "/dashboard/animals" },
   { icon: Tractor, label: "Machinery", href: "/dashboard/machinery" },
