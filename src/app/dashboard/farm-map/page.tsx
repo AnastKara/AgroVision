@@ -1,36 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { fields } from "@/lib/data";
-import { getHealthColor, getFieldColor, getFieldBorderColor, formatNumber } from "@/lib/utils";
+import { getHealthColor, formatNumber } from "@/lib/utils";
 import {
   MapPin,
   Plus,
   Edit3,
-  Trash2,
   Sprout,
   Droplets,
-  Wind,
-  Thermometer,
   Activity,
   X,
   ChevronRight,
   Crop,
-  Maximize2,
-  Minus,
   Ruler,
 } from "lucide-react";
 
-const healthGradient = (health: number) => {
-  if (health >= 75) return "from-green-500/20 to-green-500/5 border-green-500/30";
-  if (health >= 50) return "from-yellow-500/20 to-yellow-500/5 border-yellow-500/30";
-  return "from-red-500/20 to-red-500/5 border-red-500/30";
-};
+const FarmMap = dynamic(() => import("@/components/farm-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[400px] lg:h-[500px] bg-muted/20 rounded-xl animate-pulse">
+      <div className="text-center">
+        <MapPin size={32} className="mx-auto mb-2 text-muted-foreground/50" />
+        <p className="text-sm text-muted-foreground">Loading satellite map...</p>
+      </div>
+    </div>
+  ),
+});
 
 const healthTextColor = (health: number) => {
   if (health >= 75) return "text-green-500";
@@ -40,7 +42,6 @@ const healthTextColor = (health: number) => {
 
 export default function FarmMapPage() {
   const [selectedField, setSelectedField] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
 
   const selectedFieldData = fields.find((f) => f.id === selectedField);
 
@@ -55,7 +56,7 @@ export default function FarmMapPage() {
         <div>
           <h1 className="text-3xl font-bold">Interactive Farm Map</h1>
           <p className="text-muted-foreground mt-1">
-            Satellite view of your farm with field boundaries and health data
+            Real-time Sentinel-2 satellite view of your farm with field boundaries and health data
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -73,115 +74,10 @@ export default function FarmMapPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Map Area */}
         <div className="lg:col-span-2">
-          <Card className="p-0 overflow-hidden">
-            <div className="relative bg-gradient-to-br from-green-950 via-green-900 to-emerald-950 aspect-[4/3] lg:aspect-[16/9]">
-              {/* Satellite background pattern */}
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(45deg, rgba(22, 163, 74, 0.1) 25%, transparent 25%),
-                    linear-gradient(-45deg, rgba(22, 163, 74, 0.1) 25%, transparent 25%),
-                    linear-gradient(45deg, transparent 75%, rgba(22, 163, 74, 0.1) 75%),
-                    linear-gradient(-45deg, transparent 75%, rgba(22, 163, 74, 0.1) 75%)
-                  `,
-                  backgroundSize: "60px 60px",
-                }}
-              />
-
-              {/* Grid lines */}
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-                  backgroundSize: "40px 40px",
-                }}
-              />
-
-              {/* Fields */}
-              <div className="absolute inset-0 p-6">
-                <div
-                  className="relative w-full h-full"
-                  style={{ transform: `scale(${zoom})`, transformOrigin: "center center", transition: "transform 0.3s ease" }}
-                >
-                  {fields.map((field) => (
-                    <motion.button
-                      key={field.id}
-                      onClick={() => setSelectedField(field.id)}
-                      className={`absolute rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-105 ${
-                        getFieldBorderColor(field.health)
-                      } ${selectedField === field.id ? "ring-4 ring-primary/50 z-10" : "z-0"}`}
-                      style={{
-                        left: `${((field.longitude + 74.008) / 0.01) * 20}%`,
-                        top: `${((40.7165 - field.latitude) / 0.005) * 20}%`,
-                        width: `${field.area * 1.2}px`,
-                        height: `${field.area * 0.8}px`,
-                        background:
-                          field.health >= 75
-                            ? "rgba(34, 197, 94, 0.3)"
-                            : field.health >= 50
-                            ? "rgba(234, 179, 8, 0.3)"
-                            : "rgba(239, 68, 68, 0.3)",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <div className="p-2 text-left">
-                        <p className="text-xs font-bold text-white drop-shadow-lg">{field.name}</p>
-                        <p className="text-[10px] text-white/80">{field.cropType}</p>
-                        <p className="text-[10px] text-white/80">{field.area} ha</p>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Map Controls */}
-              <div className="absolute top-4 right-4 flex flex-col gap-1">
-                <Button
-                  variant="glass"
-                  size="icon"
-                  className="w-8 h-8"
-                  onClick={() => setZoom(Math.min(zoom + 0.2, 3))}
-                >
-                  <Plus size={14} />
-                </Button>
-                <Button
-                  variant="glass"
-                  size="icon"
-                  className="w-8 h-8"
-                  onClick={() => setZoom(Math.max(zoom - 0.2, 0.5))}
-                >
-                  <Minus size={14} />
-                </Button>
-                <Button
-                  variant="glass"
-                  size="icon"
-                  className="w-8 h-8"
-                  onClick={() => setZoom(1)}
-                >
-                  <Maximize2 size={14} />
-                </Button>
-              </div>
-
-              {/* Legend */}
-              <div className="absolute bottom-4 left-4 glass rounded-xl p-3">
-                <p className="text-xs font-medium mb-2">Field Health</p>
-                <div className="space-y-1.5">
-                  {[
-                    { color: "bg-green-500", label: "Healthy (75%+)" },
-                    { color: "bg-yellow-500", label: "Needs Attention (50-75%)" },
-                    { color: "bg-red-500", label: "Critical (<50%)" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded ${item.color}`} />
-                      <span className="text-[10px] text-muted-foreground">{item.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
+          <FarmMap
+            selectedFieldId={selectedField}
+            onFieldSelect={setSelectedField}
+          />
         </div>
 
         {/* Field Details Panel */}
