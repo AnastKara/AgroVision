@@ -269,6 +269,260 @@ export async function getImageStats(
 }
 
 // ============================================================
+// Polygon / Field Management Types
+// ============================================================
+
+export interface AMPolygonGeometry {
+  type: "Polygon";
+  coordinates: number[][][]; // [[[lng, lat], [lng, lat], ...]]
+}
+
+export interface AMPolygon {
+  id: string;
+  name: string;
+  geo_json: {
+    type: "Feature";
+    properties: Record<string, unknown>;
+    geometry: AMPolygonGeometry;
+  };
+  center: [number, number];
+  area: number; // in hectares
+  user_attributes?: Record<string, string>;
+}
+
+export interface AMPolygonCreateRequest {
+  name: string;
+  geo_json: {
+    type: "Feature";
+    properties?: Record<string, unknown>;
+    geometry: AMPolygonGeometry;
+  };
+}
+
+export interface AMPolygonUpdateRequest {
+  name?: string;
+  geo_json?: {
+    type: "Feature";
+    properties?: Record<string, unknown>;
+    geometry: AMPolygonGeometry;
+  };
+}
+
+/**
+ * Convert our boundary format [{lat, lng}] to AgroMonitoring polygon format
+ */
+export function boundariesToAMCoords(boundaries: { lat: number; lng: number }[]): number[][][] {
+  // Close the polygon (first point repeated at end)
+  const coords = [...boundaries.map((b) => [b.lng, b.lat] as [number, number])];
+  // Add closing point if not already closed
+  if (coords.length > 0) {
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      coords.push([...first]);
+    }
+  }
+  return [coords];
+}
+
+/**
+ * Convert AgroMonitoring polygon coordinates back to our boundary format
+ */
+export function amCoordsToBoundaries(coordinates: number[][][]): { lat: number; lng: number }[] {
+  if (!coordinates || coordinates.length === 0) return [];
+  const ring = coordinates[0];
+  // Remove closing point if it matches the first
+  const points = ring.length > 1 &&
+    ring[0][0] === ring[ring.length - 1][0] &&
+    ring[0][1] === ring[ring.length - 1][1]
+    ? ring.slice(0, -1)
+    : ring;
+  return points.map((c) => ({ lat: c[1], lng: c[0] }));
+}
+
+// ============================================================
+// Polygon CRUD Methods
+// ============================================================
+
+/**
+ * Create a new polygon (field) in AgroMonitoring
+ * POST /agro/1.0/polygons
+ */
+export async function createPolygon(name: string, boundaries: { lat: number; lng: number }[]): Promise<AMPolygon> {
+  const coords = boundariesToAMCoords(boundaries);
+  const body: AMPolygonCreateRequest = {
+    name,
+    geo_json: {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "Polygon",
+        coordinates: coords,
+      },
+    },
+  };
+
+  const apiKey = getApiKey();
+  const url = `${AGRO_API_BASE}/polygons?appid=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AgroMonitoring createPolygon error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get all polygons (fields) from AgroMonitoring
+ * GET /agro/1.0/polygons
+ */
+export async function listPolygons(): Promise<AMPolygon[]> {
+  const apiKey = getApiKey();
+  const url = `${AGRO_API_BASE}/polygons?appid=${apiKey}`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AgroMonitoring listPolygons error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get a single polygon by ID
+ * GET /agro/1.0/polygons/{id}
+ */
+export async function getPolygon(id: string): Promise<AMPolygon> {
+  const apiKey = getApiKey();
+  const url = `${AGRO_API_BASE}/polygons/${id}?appid=${apiKey}`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AgroMonitoring getPolygon error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Update a polygon's boundaries
+ * PUT /agro/1.0/polygons/{id}
+ */
+export async function updatePolygon(
+  id: string,
+  updates: { name?: string; boundaries?: { lat: number; lng: number }[] }
+): Promise<AMPolygon> {
+  const apiKey = getApiKey();
+  const url = `${AGRO_API_BASE}/polygons/${id}?appid=${apiKey}`;
+
+  const body: AMPolygonUpdateRequest = {};
+  if (updates.name) body.name = updates.name;
+  if (updates.boundaries) {
+    const coords = boundariesToAMCoords(updates.boundaries);
+    body.geo_json = {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "Polygon",
+        coordinates: coords,
+      },
+    };
+  }
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AgroMonitoring updatePolygon error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete a polygon
+ * DELETE /agro/1.0/polygons/{id}
+ */
+export async function deletePolygon(id: string): Promise<boolean> {
+  const apiKey = getApiKey();
+  const url = `${AGRO_API_BASE}/polygons/${id}?appid=${apiKey}`;
+
+  const response = await fetch(url, { method: "DELETE" });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AgroMonitoring deletePolygon error (${response.status}): ${errorText}`);
+  }
+
+  return true;
+}
+
+/**
+ * Get weather data for a specific polygon
+ * GET /agro/1.0/polygons/{id}/weather
+ */
+export async function getPolygonWeather(id: string): Promise<AMWeatherResponse> {
+  return fetchFromAgro<AMWeatherResponse>(`/polygons/${id}/weather`, {});
+}
+
+/**
+ * Get satellite data for a specific polygon
+ * GET /agro/1.0/polygons/{id}/image/search + /image/{imgId}/stats
+ */
+export async function getPolygonSatellite(
+  id: string,
+  start?: number,
+  end?: number
+): Promise<{
+  images: AMImageSearchResult[];
+  latestStats: AMImageStats | null;
+}> {
+  const now = Math.floor(Date.now() / 1000);
+  const startTime = start || now - 30 * 24 * 60 * 60; // default 30 days back
+  const endTime = end || now;
+
+  const images = await fetchFromAgro<AMImageSearchResult[]>(`/polygons/${id}/image/search`, {
+    start: startTime.toString(),
+    end: endTime.toString(),
+  });
+
+  // Get latest visible image stats
+  const latestImage = images
+    .filter((img) => img.visible && img.cloud_coverage < 30)
+    .sort((a, b) => b.dt - a.dt)[0];
+
+  let latestStats: AMImageStats | null = null;
+  if (latestImage) {
+    latestStats = await getImageStats(latestImage.id);
+  }
+
+  return { images, latestStats };
+}
+
+/**
+ * Get soil moisture data for a specific polygon
+ * GET /agro/1.0/polygons/{id}/soil
+ */
+export async function getPolygonSoil(id: string): Promise<AMSoilResponse> {
+  return fetchFromAgro<AMSoilResponse>(`/polygons/${id}/soil`, {});
+}
+
+// ============================================================
 // Domain-specific data transformation
 // ============================================================
 

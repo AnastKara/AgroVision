@@ -1,0 +1,1 @@
+const fs=require(" fs);fs.writeFileSync(c:/Users/user/Documents/AgroVision/out.txt,	est);console.log(OK);

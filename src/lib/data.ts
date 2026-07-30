@@ -13,6 +13,13 @@ export interface Field {
   latitude: number;
   longitude: number;
   boundaries: { lat: number; lng: number }[];
+  /** AgroMonitoring polygon ID for satellite/weather data */
+  agroMonitoringId?: string;
+  /** Future IoT sensor IDs attached to this field */
+  sensorIds?: string[];
+  /** Timestamps */
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Animal {
@@ -118,6 +125,10 @@ export const fields: Field[] = [
       { lat: 40.7142, lng: -74.004 },
       { lat: 40.7132, lng: -74.005 },
     ],
+    agroMonitoringId: undefined,
+    sensorIds: [],
+    createdAt: "2024-01-15T08:00:00Z",
+    updatedAt: "2024-03-15T10:30:00Z",
   },
   {
     id: "f2",
@@ -139,6 +150,10 @@ export const fields: Field[] = [
       { lat: 40.7132, lng: -74.002 },
       { lat: 40.7122, lng: -74.003 },
     ],
+    agroMonitoringId: undefined,
+    sensorIds: [],
+    createdAt: "2024-01-20T09:00:00Z",
+    updatedAt: "2024-03-12T14:00:00Z",
   },
   {
     id: "f3",
@@ -160,6 +175,10 @@ export const fields: Field[] = [
       { lat: 40.7159, lng: -74.0 },
       { lat: 40.7149, lng: -74.001 },
     ],
+    agroMonitoringId: undefined,
+    sensorIds: [],
+    createdAt: "2024-02-01T11:00:00Z",
+    updatedAt: "2024-03-10T16:00:00Z",
   },
   {
     id: "f4",
@@ -181,6 +200,10 @@ export const fields: Field[] = [
       { lat: 40.7129, lng: -74.006 },
       { lat: 40.7119, lng: -74.007 },
     ],
+    agroMonitoringId: undefined,
+    sensorIds: [],
+    createdAt: "2024-01-10T07:00:00Z",
+    updatedAt: "2024-03-14T09:00:00Z",
   },
   {
     id: "f5",
@@ -202,6 +225,10 @@ export const fields: Field[] = [
       { lat: 40.7144, lng: -73.998 },
       { lat: 40.7134, lng: -73.999 },
     ],
+    agroMonitoringId: undefined,
+    sensorIds: [],
+    createdAt: "2024-02-15T10:00:00Z",
+    updatedAt: "2024-03-16T08:30:00Z",
   },
 ];
 
