@@ -30,6 +30,8 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
   LineChart as LineChartIcon,
+  Download,
+  Printer,
 } from "lucide-react";
 
 const COLORS = ["#22c55e", "#eab308", "#3b82f6", "#ef4444", "#a855f7", "#f97316"];
@@ -69,9 +71,31 @@ export default function AnalyticsPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground mt-1">Comprehensive farm analytics and insights</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground mt-1">Comprehensive farm analytics and insights</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            className="glass px-4 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-muted/80 transition-all"
+          >
+            <Printer size={14} />
+            Print
+          </button>
+          <button
+            onClick={() => {
+              import("@/lib/export-service").then((m) => {
+                m.exportAnalyticsCSV(transactions, analyticsData);
+              });
+            }}
+            className="glass px-4 py-2 rounded-xl text-sm flex items-center gap-2 hover:bg-muted/80 transition-all"
+          >
+            <Download size={14} />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

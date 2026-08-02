@@ -24,6 +24,8 @@ import {
   Menu,
   X,
   Cloud,
+  Package,
+  Calendar,
 } from "lucide-react";
 
 const navItems = [
@@ -31,6 +33,8 @@ const navItems = [
   { icon: Map, label: "Farm Map", href: "/dashboard/farm-map" },
   { icon: Cloud, label: "Weather", href: "/dashboard/weather" },
   { icon: Sprout, label: "Fields", href: "/dashboard/fields" },
+  { icon: Calendar, label: "Calendar", href: "/dashboard/calendar" },
+  { icon: Package, label: "Inventory", href: "/dashboard/inventory" },
   { icon: PawPrint, label: "Animals", href: "/dashboard/animals" },
   { icon: Tractor, label: "Machinery", href: "/dashboard/machinery" },
   { icon: Users, label: "Workers", href: "/dashboard/workers" },

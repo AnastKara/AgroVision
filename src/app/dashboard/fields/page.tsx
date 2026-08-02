@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,10 +11,11 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { fields } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
-import { Sprout, Plus, Search, Filter, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp } from "lucide-react";
+import { Sprout, Plus, Search, Filter, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function FieldsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedField, setSelectedField] = useState<string | null>(null);
 
@@ -31,10 +34,12 @@ export default function FieldsPage() {
           <h1 className="text-3xl font-bold">Fields</h1>
           <p className="text-muted-foreground mt-1">Manage your fields and monitor crop health</p>
         </div>
-        <Button>
-          <Plus size={16} className="mr-1" />
-          Add Field
-        </Button>
+        <Link href="/dashboard/fields/create">
+          <Button>
+            <Plus size={16} className="mr-1" />
+            Add Field
+          </Button>
+        </Link>
       </div>
 
       {/* Search & Filter */}
@@ -237,8 +242,16 @@ export default function FieldsPage() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button className="flex-1">Edit Field</Button>
-                <Button variant="outline" className="flex-1">View on Map</Button>
+                <Button className="flex-1" onClick={() => router.push(`/dashboard/fields/${selectedFieldData.id}`)}>
+                  View Details
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => router.push("/dashboard/farm-map")}
+                >
+                  View on Map
+                </Button>
               </div>
             </CardContent>
           </Card>

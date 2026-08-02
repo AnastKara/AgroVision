@@ -1,22 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+} from "@hello-pangea/dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { tasks } from "@/lib/data";
+import type { Task } from "@/lib/data";
 import {
   Calendar,
   Plus,
   ListTodo,
   Columns,
-  Clock,
-  AlertCircle,
   CheckCircle2,
   Circle,
-  ArrowRight,
   Sprout,
   Droplets,
   Tractor,
@@ -37,6 +41,7 @@ const priorityColors = {
   critical: "destructive",
 } as const;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const typeIcons: Record<string, any> = {
   Irrigation: Droplets,
   Harvesting: Sprout,
@@ -54,6 +59,24 @@ export default function TasksPage() {
 
   const getTasksByStatus = (status: string) =>
     taskList.filter((t) => t.status === status);
+
+  const handleDragEnd = useCallback((result: DropResult) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+    setTaskList((prev) =>
+      prev.map((task) =>
+        task.id === draggableId
+          ? { ...task, status: destination.droppableId as Task["status"] }
+          : task
+      )
+    );
+  }, []);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -108,54 +131,77 @@ export default function TasksPage() {
       </div>
 
       {view === "kanban" ? (
-        /* Kanban Board */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
-          {columns.map((column) => (
-            <div key={column.id}>
-              <div className={`rounded-2xl p-4 ${column.color}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold">{column.title}</h3>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {getTasksByStatus(column.id).length}
-                  </Badge>
-                </div>
-                <div className="space-y-3 min-h-[200px]">
-                  {getTasksByStatus(column.id).map((task) => {
-                    const TypeIcon = typeIcons[task.type] || Activity;
-                    return (
-                      <motion.div
-                        key={task.id}
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="glass rounded-xl p-4 cursor-pointer hover:shadow-md transition-all"
+        /* Kanban Board with Drag & Drop */
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
+            {columns.map((column) => (
+              <div key={column.id}>
+                <div className={`rounded-2xl p-4 ${column.color}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold">{column.title}</h3>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {getTasksByStatus(column.id).length}
+                    </Badge>
+                  </div>
+                  <Droppable droppableId={column.id}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`space-y-3 min-h-[200px] transition-colors rounded-xl ${
+                          snapshot.isDraggingOver ? "bg-primary/5" : ""
+                        }`}
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <Badge variant={priorityColors[task.priority]} className="text-[10px]">
-                            {task.priority}
-                          </Badge>
-                          <TypeIcon size={14} className="text-muted-foreground" />
-                        </div>
-                        <p className="text-sm font-medium mb-1">{task.title}</p>
-                        <p className="text-xs text-muted-foreground mb-3">{task.description}</p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Avatar fallback={task.assignedTo.split(" ").map((n) => n[0]).join("")} size="sm" />
-                            <span>{task.assignedTo.split(" ")[0]}</span>
-                          </div>
-                          <span className="flex items-center gap-1">
-                            <Calendar size={10} />
-                            {task.dueDate}
-                          </span>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                        {getTasksByStatus(column.id).map((task, index) => {
+                          const TypeIcon = typeIcons[task.type] || Activity;
+                          return (
+                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`glass rounded-xl p-4 transition-all ${
+                                    snapshot.isDragging
+                                      ? "shadow-xl ring-2 ring-primary rotate-2"
+                                      : "hover:shadow-md"
+                                  }`}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <Badge variant={priorityColors[task.priority]} className="text-[10px]">
+                                      {task.priority}
+                                    </Badge>
+                                    <TypeIcon size={14} className="text-muted-foreground" />
+                                  </div>
+                                  <p className="text-sm font-medium mb-1">{task.title}</p>
+                                  <p className="text-xs text-muted-foreground mb-3">{task.description}</p>
+                                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                      <Avatar fallback={task.assignedTo.split(" ").map((n) => n[0]).join("")} size="sm" />
+                                      <span>{task.assignedTo.split(" ")[0]}</span>
+                                    </div>
+                                    <span className="flex items-center gap-1">
+                                      <Calendar size={10} />
+                                      {task.dueDate}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </DragDropContext>
       ) : (
         /* List View */
         <Card>
@@ -223,4 +269,3 @@ export default function TasksPage() {
     </motion.div>
   );
 }
-
