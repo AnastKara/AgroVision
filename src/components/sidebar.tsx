@@ -26,12 +26,14 @@ import {
   Cloud,
   Package,
   Calendar,
+  Radio,
 } from "lucide-react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Map, label: "Farm Map", href: "/dashboard/farm-map" },
   { icon: Cloud, label: "Weather", href: "/dashboard/weather" },
+  { icon: Radio, label: "Sensors", href: "/dashboard/sensors" },
   { icon: Sprout, label: "Fields", href: "/dashboard/fields" },
   { icon: Calendar, label: "Calendar", href: "/dashboard/calendar" },
   { icon: Package, label: "Inventory", href: "/dashboard/inventory" },

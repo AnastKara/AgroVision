@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import FieldDetailsDashboard from "@/components/field-details-dashboard";
@@ -14,6 +14,12 @@ import {
   getPolygonSatellite,
   getPolygonSoil,
 } from "@/lib/agromonitoring-service";
+import {
+  getSensorsByField,
+  getLatestReading,
+  formatSensorValue,
+  sensorTypeInfo,
+} from "@/lib/sensor-data";
 import type { Field } from "@/lib/data";
 import {
   ArrowLeft,
@@ -22,6 +28,9 @@ import {
   AlertTriangle,
   Edit3,
   Trash2,
+  Radio,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 
 const FieldPolygonDrawer = dynamic(
@@ -195,6 +204,7 @@ export default function FieldDetailsPage() {
   }, [fieldId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -298,7 +308,7 @@ export default function FieldDetailsPage() {
         </div>
       </Card>
 
-      {/* Field details dashboard */}
+{/* Field details dashboard */}
       <FieldDetailsDashboard
         field={field}
         loading={loading}
@@ -310,6 +320,77 @@ export default function FieldDetailsPage() {
         agroMonitoringConfigured={agroMonitoringConfigured}
         onRefresh={loadData}
       />
+
+      {/* Connected Sensors */}
+      {(() => {
+        const fieldSensors = getSensorsByField(field.id);
+        if (fieldSensors.length === 0) return null;
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Radio size={18} className="text-primary" />
+                Connected Sensors
+                <Badge variant="secondary" className="text-[10px] ml-2">
+                  {fieldSensors.length} device{fieldSensors.length > 1 ? "s" : ""}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {fieldSensors.map((sensor) => {
+                  const latest = getLatestReading(sensor.id);
+                  const typeInfo = sensorTypeInfo[sensor.type];
+                  const isOnline = sensor.status === "online";
+                  const isAlert = latest && !latest.quality;
+                  return (
+                    <div
+                      key={sensor.id}
+                      className="glass rounded-xl p-4 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                            isOnline
+                              ? "bg-green-500/10 text-green-500"
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            <Radio size={16} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{sensor.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{typeInfo?.label || sensor.type}</p>
+                          </div>
+                        </div>
+                        {isOnline ? (
+                          <Wifi size={14} className="text-green-500" />
+                        ) : (
+                          <WifiOff size={14} className="text-muted-foreground" />
+                        )}
+                      </div>
+                      {latest && (
+                        <div className="flex items-center justify-between">
+<span className="text-lg font-bold">{formatSensorValue(latest.value, latest.unit)}</span>
+                          <span className={`text-[10px] ${isAlert ? "text-yellow-500" : "text-green-500"}`}>
+                            {isAlert ? "⚠ Threshold" : "✓ Normal"}
+                          </span>
+                        </div>
+                      )}
+                      {!latest && (
+                        <p className="text-xs text-muted-foreground">No recent readings</p>
+                      )}
+                      <div className="flex items-center justify-between mt-2 text-[10px] text-muted-foreground">
+                        <span>Battery: {sensor.metadata.batteryLevel ?? "N/A"}%</span>
+                        <span>Signal: {sensor.metadata.signalStrength ?? "N/A"} dBm</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </motion.div>
   );
 }

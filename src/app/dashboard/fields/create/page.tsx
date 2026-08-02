@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -67,7 +67,7 @@ export default function CreateFieldPage() {
     []
   );
 
-  const handleSave = useCallback(async () => {
+const handleSave = useCallback(async () => {
     if (!canSave) return;
     setSaving(true);
     setError(null);
@@ -106,6 +106,18 @@ export default function CreateFieldPage() {
       setSaving(false);
     }
   }, [canSave, name, cropType, boundaries, router]);
+
+  // Warn about unsaved changes when navigating away
+  const hasUnsavedChanges = (name.trim().length > 0 || cropType.length > 0 || boundaries.length > 0) && !success;
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasUnsavedChanges]);
 
   return (
     <motion.div

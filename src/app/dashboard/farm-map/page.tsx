@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Crop,
   Ruler,
+  Upload,
+  Loader2,
 } from "lucide-react";
 
 const FarmMap = dynamic(() => import("@/components/farm-map"), {
@@ -47,6 +49,8 @@ export default function FarmMapPage() {
   const router = useRouter();
   const [fields, setFields] = useState<Field[]>([]);
   const [selectedField, setSelectedField] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadFields = useCallback(async () => {
     try {
@@ -68,6 +72,34 @@ export default function FarmMapPage() {
     window.addEventListener("focus", refresh);
     return () => window.removeEventListener("focus", refresh);
   }, [loadFields]);
+
+  const handleImportGps = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").filter((l) => l.trim());
+      const coords = lines.map((line) => {
+        const parts = line.trim().split(/[,\s]+/);
+        return { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
+      }).filter((c) => !isNaN(c.lat) && !isNaN(c.lng));
+      if (coords.length >= 3) {
+        router.push(`/dashboard/fields/create?bounds=${encodeURIComponent(JSON.stringify(coords))}`);
+      } else {
+        alert("GPS file must contain at least 3 valid coordinate pairs (lat, lng).");
+      }
+    } catch {
+      alert("Failed to parse GPS file. Ensure it contains lat/lng coordinates (one pair per line).");
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  }, [router]);
 
   const selectedFieldData = fields.find((f) => f.id === selectedField);
 
@@ -92,7 +124,24 @@ export default function FarmMapPage() {
               Add Field
             </Button>
           </Link>
-          <Button variant="glass" size="sm">
+<input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".txt,.csv,.gpx,.gps"
+            className="hidden"
+          />
+          <Button
+            variant="glass"
+            size="sm"
+            onClick={handleImportGps}
+            disabled={importing}
+          >
+            {importing ? (
+              <Loader2 size={16} className="mr-1 animate-spin" />
+            ) : (
+              <Upload size={16} className="mr-1" />
+            )}
             Import GPS
           </Button>
         </div>

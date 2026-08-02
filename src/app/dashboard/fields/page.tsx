@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { getFields } from "@/lib/fields-service";
 import type { Field } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
-import { Sprout, Plus, Search, Filter, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp, MapPin, Loader2 } from "lucide-react";
+import { Sprout, Plus, Search, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp, MapPin, Loader2, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function FieldsPage() {
@@ -21,6 +21,8 @@ export default function FieldsPage() {
   const [selectedField, setSelectedField] = useState<string | null>(null);
   const [fields, setFields] = useState<Field[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const loadFields = useCallback(async () => {
     try {
@@ -42,11 +44,18 @@ export default function FieldsPage() {
     return () => window.removeEventListener("focus", refresh);
   }, [loadFields]);
 
-  const filteredFields = fields.filter(
-    (f) =>
+  const filteredFields = fields.filter((f) => {
+    const matchesSearch =
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.cropType.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      f.cropType.toLowerCase().includes(searchQuery.toLowerCase());
+
+    let matchesStatus = true;
+    if (statusFilter === "healthy") matchesStatus = f.health >= 75;
+    else if (statusFilter === "warning") matchesStatus = f.health >= 50 && f.health < 75;
+    else if (statusFilter === "critical") matchesStatus = f.health < 50;
+
+    return matchesSearch && matchesStatus;
+  });
 
   const selectedFieldData = fields.find((f) => f.id === selectedField);
 
@@ -55,60 +64,64 @@ export default function FieldsPage() {
       ? Math.round(fields.reduce((a, f) => a + f.health, 0) / fields.length)
       : 0;
 
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Fields</h1>
-          <p className="text-muted-foreground mt-1">Manage your fields and monitor crop health</p>
+  const renderContent = () => {
+    // Loading State
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Loader2 size={40} className="mx-auto mb-3 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading fields...</p>
+          </div>
         </div>
-        <Link href="/dashboard/fields/create">
-          <Button>
-            <Plus size={16} className="mr-1" />
-            Add Field
+      );
+    }
+
+    // Empty State - no fields at all
+    if (fields.length === 0) {
+      return (
+        <Card className="border-dashed">
+          <CardContent className="p-12 text-center">
+            <Sprout size={48} className="mx-auto mb-4 text-muted-foreground/40" />
+            <h2 className="text-xl font-semibold mb-2">No fields yet</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Get started by adding your first field. Draw its boundaries on the satellite map and set the crop type.
+            </p>
+            <Link href="/dashboard/fields/create">
+              <Button size="lg">
+                <Plus size={16} className="mr-2" />
+                Add Your First Field
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // No Results State - fields exist but none match filters
+    if (filteredFields.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <Search size={40} className="mx-auto mb-4 text-muted-foreground/40" />
+          <h2 className="text-lg font-semibold mb-2">No fields match your search</h2>
+          <p className="text-muted-foreground mb-4">
+            Try adjusting your search query or filter criteria.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchQuery("");
+              setStatusFilter("all");
+            }}
+          >
+            Clear Filters
           </Button>
-        </Link>
-      </div>
-
-      {/* Search & Filter */}
-      <div className="flex gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search fields..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
         </div>
-        <Button variant="outline" size="icon">
-          <Filter size={16} />
-        </Button>
-      </div>
+      );
+    }
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Total Fields", value: fields.length, icon: Sprout },
-          { label: "Total Area", value: `${fields.reduce((a, f) => a + f.area, 0)} ha`, icon: Ruler },
-          { label: "Avg Health", value: `${avgHealth}%`, icon: Activity },
-          { label: "Est. Revenue", value: `$${formatNumber(123000)}`, icon: DollarSign },
-        ].map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <stat.icon size={18} className="text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-                <p className="text-lg font-bold">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Fields Grid */}
+    // Fields Grid
+    return (
       <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredFields.map((field) => (
           <motion.div
@@ -180,6 +193,108 @@ export default function FieldsPage() {
           </motion.div>
         ))}
       </div>
+    );
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Fields</h1>
+          <p className="text-muted-foreground mt-1">Manage your fields and monitor crop health</p>
+        </div>
+        <Link href="/dashboard/fields/create">
+          <Button>
+            <Plus size={16} className="mr-1" />
+            Add Field
+          </Button>
+        </Link>
+      </div>
+
+      {/* Search & Filter */}
+      <div className="flex gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search fields..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <Button
+          variant={showFilters ? "default" : "outline"}
+          size="icon"
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <SlidersHorizontal size={16} />
+        </Button>
+      </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-2xl p-4"
+        >
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="text-sm font-medium text-muted-foreground">Health Status:</span>
+            {["all", "healthy", "warning", "critical"].map((option) => (
+              <button
+                key={option}
+                onClick={() => setStatusFilter(option)}
+                className={`px-4 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                  statusFilter === option
+                    ? option === "healthy"
+                      ? "bg-green-500/20 text-green-600 border border-green-500/30"
+                      : option === "warning"
+                      ? "bg-yellow-500/20 text-yellow-600 border border-yellow-500/30"
+                      : option === "critical"
+                      ? "bg-red-500/20 text-red-600 border border-red-500/30"
+                      : "bg-primary/20 text-primary border border-primary/30"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted border border-transparent"
+                }`}
+              >
+                {option === "all" ? "All Fields" : option.charAt(0).toUpperCase() + option.slice(1)}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Total Fields", value: fields.length, icon: Sprout },
+          { label: "Total Area", value: `${fields.reduce((a, f) => a + f.area, 0)} ha`, icon: Ruler },
+          { label: "Avg Health", value: `${avgHealth}%`, icon: Activity },
+          { label: "Est. Revenue", value: `$${formatNumber(123000)}`, icon: DollarSign },
+        ].map((stat, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <stat.icon size={18} className="text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-lg font-bold">{stat.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Dynamic Content: Loading / Empty / No Results / Grid */}
+      {renderContent()}
 
       {/* Field Detail Modal / Panel */}
       {selectedFieldData && (
@@ -288,4 +403,3 @@ export default function FieldsPage() {
     </motion.div>
   );
 }
-
