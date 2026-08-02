@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { tasks, fields } from "@/lib/data";
+import { tasks } from "@/lib/data";
+import type { Field } from "@/lib/data";
+import { getFields } from "@/lib/fields-service";
 import { formatDate } from "@/lib/utils";
 import {
   Calendar as CalendarIcon,
@@ -97,6 +99,21 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"month" | "week" | "agenda">("month");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [fields, setFields] = useState<Field[]>([]);
+
+  const loadFields = useCallback(async () => {
+    try {
+      const data = await getFields();
+      setFields(data);
+    } catch {
+      setFields([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadFields();
+  }, [loadFields]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

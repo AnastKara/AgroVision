@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,15 +9,38 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { fields } from "@/lib/data";
+import { getFields } from "@/lib/fields-service";
+import type { Field } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
-import { Sprout, Plus, Search, Filter, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp, MapPin } from "lucide-react";
+import { Sprout, Plus, Search, Filter, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp, MapPin, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export default function FieldsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedField, setSelectedField] = useState<string | null>(null);
+  const [fields, setFields] = useState<Field[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadFields = useCallback(async () => {
+    try {
+      const data = await getFields();
+      setFields(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFields();
+  }, [loadFields]);
+
+  // Refresh fields when returning from the create page
+  useEffect(() => {
+    const refresh = () => loadFields();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [loadFields]);
 
   const filteredFields = fields.filter(
     (f) =>
@@ -26,6 +49,11 @@ export default function FieldsPage() {
   );
 
   const selectedFieldData = fields.find((f) => f.id === selectedField);
+
+  const avgHealth =
+    fields.length > 0
+      ? Math.round(fields.reduce((a, f) => a + f.health, 0) / fields.length)
+      : 0;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -63,7 +91,7 @@ export default function FieldsPage() {
         {[
           { label: "Total Fields", value: fields.length, icon: Sprout },
           { label: "Total Area", value: `${fields.reduce((a, f) => a + f.area, 0)} ha`, icon: Ruler },
-          { label: "Avg Health", value: `${Math.round(fields.reduce((a, f) => a + f.health, 0) / fields.length)}%`, icon: Activity },
+          { label: "Avg Health", value: `${avgHealth}%`, icon: Activity },
           { label: "Est. Revenue", value: `$${formatNumber(123000)}`, icon: DollarSign },
         ].map((stat, i) => (
           <Card key={i}>

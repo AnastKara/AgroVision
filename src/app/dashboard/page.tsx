@@ -34,7 +34,9 @@ import {
   Wind,
   RefreshCw,
 } from "lucide-react";
-import { fields, tasks, transactions, notifications, weatherData as mockWeatherData, analyticsData } from "@/lib/data";
+import { tasks, transactions, notifications, weatherData as mockWeatherData, analyticsData } from "@/lib/data";
+import type { Field } from "@/lib/data";
+import { getFields } from "@/lib/fields-service";
 import { fetchWeatherData, WeatherData } from "@/lib/weather-service";
 
 const fadeInUp = {
@@ -79,6 +81,7 @@ const taskTypeIcons: Record<string, any> = {
 export default function DashboardPage() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [fields, setFields] = useState<Field[]>([]);
 
   const loadWeatherData = useCallback(async () => {
     try {
@@ -92,9 +95,21 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const loadFields = useCallback(async () => {
+    try {
+      const data = await getFields();
+      setFields(data);
+    } catch {
+      setFields([]);
+    }
+  }, []);
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadWeatherData();
-  }, [loadWeatherData]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadFields();
+  }, [loadWeatherData, loadFields]);
 
   // Use live data if available, otherwise fall back to mock
   const displayWeather = weatherData || {
@@ -106,7 +121,9 @@ export default function DashboardPage() {
 
   const totalFields = fields.length;
   const totalArea = fields.reduce((acc, f) => acc + f.area, 0);
-  const avgHealth = Math.round(fields.reduce((acc, f) => acc + f.health, 0) / fields.length);
+  const avgHealth = fields.length
+    ? Math.round(fields.reduce((acc, f) => acc + f.health, 0) / fields.length)
+    : 0;
   const totalRevenue = transactions
     .filter((t) => t.type === "income" && t.status === "completed")
     .reduce((acc, t) => acc + t.amount, 0);

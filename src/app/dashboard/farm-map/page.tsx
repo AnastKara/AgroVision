@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { fields } from "@/lib/data";
+import { getFields } from "@/lib/fields-service";
+import type { Field } from "@/lib/data";
 import { getHealthColor, formatNumber } from "@/lib/utils";
 import {
   MapPin,
@@ -41,7 +43,29 @@ const healthTextColor = (health: number) => {
 };
 
 export default function FarmMapPage() {
+  const [fields, setFields] = useState<Field[]>([]);
   const [selectedField, setSelectedField] = useState<string | null>(null);
+
+  const loadFields = useCallback(async () => {
+    try {
+      const data = await getFields();
+      setFields(data);
+    } catch {
+      setFields([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadFields();
+  }, [loadFields]);
+
+  // Refresh fields when returning from the create page
+  useEffect(() => {
+    const refresh = () => loadFields();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [loadFields]);
 
   const selectedFieldData = fields.find((f) => f.id === selectedField);
 
@@ -60,10 +84,12 @@ export default function FarmMapPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="glass" size="sm">
-            <Plus size={16} className="mr-1" />
-            Add Field
-          </Button>
+          <Link href="/dashboard/fields/create">
+            <Button variant="glass" size="sm">
+              <Plus size={16} className="mr-1" />
+              Add Field
+            </Button>
+          </Link>
           <Button variant="glass" size="sm">
             Import GPS
           </Button>
@@ -75,6 +101,7 @@ export default function FarmMapPage() {
         {/* Map Area */}
         <div className="lg:col-span-2">
           <FarmMap
+            fields={fields}
             selectedFieldId={selectedField}
             onFieldSelect={setSelectedField}
           />

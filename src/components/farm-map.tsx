@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { fields, type Field } from "@/lib/data";
+import type { Field } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Maximize2, Satellite, Map as MapIcon } from "lucide-react";
@@ -30,6 +30,7 @@ const SENTINEL_ATTRIBUTION =
   '&copy; <a href="https://eox.at">EOX</a> Sentinel-2 Cloudless';
 
 interface FarmMapProps {
+  fields: Field[];
   selectedFieldId: string | null;
   onFieldSelect: (fieldId: string | null) => void;
   className?: string;
@@ -75,6 +76,7 @@ function MapBoundsSetter({ fields }: { fields: Field[] }) {
 }
 
 export default function FarmMap({
+  fields,
   selectedFieldId,
   onFieldSelect,
   className,
@@ -101,10 +103,12 @@ export default function FarmMap({
     return () => document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
-  const center: [number, number] = [
-    fields.reduce((sum, f) => sum + f.latitude, 0) / fields.length,
-    fields.reduce((sum, f) => sum + f.longitude, 0) / fields.length,
-  ];
+  const center: [number, number] = fields.length
+    ? [
+        fields.reduce((sum, f) => sum + f.latitude, 0) / fields.length,
+        fields.reduce((sum, f) => sum + f.longitude, 0) / fields.length,
+      ]
+    : [40.7128, -74.006];
 
   const fieldStyles = (field: Field) => ({
     color: getHealthBorderColor(field.health),
