@@ -27,6 +27,7 @@ import {
   Package,
   Calendar,
   Radio,
+  DollarSign,
 } from "lucide-react";
 
 const navItems = [
@@ -42,6 +43,7 @@ const navItems = [
   { icon: Users, label: "Workers", href: "/dashboard/workers" },
   { icon: ShoppingBag, label: "Marketplace", href: "/dashboard/marketplace" },
   { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics" },
+  { icon: DollarSign, label: "Finance", href: "/dashboard/finance" },
   { icon: Bot, label: "AI Assistant", href: "/dashboard/ai" },
 ];
 

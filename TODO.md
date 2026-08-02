@@ -1,17 +1,17 @@
-# TODO: IoT Sensors & Field Monitoring Page
+# TODO: Financial Ledger & Accounting Page
 
-## Steps
-- [x] 1. Explore codebase (iot-types, weather-service, data, UI components)
-- [x] 2. Create plan & get user approval
-- [x] 3. Create `src/lib/sensor-data.ts` (mock sensor devices + readings + helpers)
-- [x] 4. Create `src/app/dashboard/sensors/page.tsx` (main feature page)
-- [x] 5. Update `src/components/sidebar.tsx` (add Sensors nav item)
-- [x] 6. Update `src/app/dashboard/fields/[id]/page.tsx` (connected sensors section)
-- [x] 7. Run lint/build & verify
+## Plan
+- [x] Explore existing financial infrastructure (transactions, export-service, utils, analytics)
+- [x] Create plan & get user approval
+
+## Implementation Steps
+- [x] 1. Create `src/lib/finance-data.ts` (extended mock data: accounts, invoices, budgets, recurring, helpers)
+- [x] 2. Update `src/lib/data.ts` (add more mock transactions for richer data)
+- [x] 3. Create `src/app/dashboard/finance/page.tsx` (full feature page)
+- [x] 4. Update `src/components/sidebar.tsx` (add Finance nav item)
+- [x] 5. Run lint/build & verify zero new errors
 
 ## Verification
-- ✅ ESLint: 0 new errors, 0 new warnings (1 pre-existing warning in sidebar.tsx: unused `isConfigured`)
-- ✅ TypeScript: `latest.quality` nullable guard fixed (`(latest.quality ?? 0) >= 0.85`)
-- ✅ All files created: `sensor-data.ts`, `sensors/page.tsx`, sidebar updated, field detail updated
-- ✅ No new TS/ESLint errors introduced
-
+- ESLint: 0 new errors, 0 new warnings
+- TypeScript: no new errors
+- `/dashboard/finance` renders correctly
