@@ -272,10 +272,10 @@ export default function FieldDetailsPage() {
           ) : (
             <Badge variant="secondary">Local field</Badge>
           )}
-          <Button
+<Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/dashboard/fields/${field.id}/edit`)}
+            onClick={() => router.push("/dashboard/fields")}
           >
             <Edit3 size={14} className="mr-1" />
             Edit

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ const healthTextColor = (health: number) => {
 };
 
 export default function FarmMapPage() {
+  const router = useRouter();
   const [fields, setFields] = useState<Field[]>([]);
   const [selectedField, setSelectedField] = useState<string | null>(null);
 
@@ -168,13 +170,23 @@ export default function FarmMapPage() {
                       ))}
                     </div>
 
-                    {/* Actions */}
+{/* Actions */}
                     <div className="flex gap-2 pt-2">
-                      <Button variant="default" size="sm" className="flex-1">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => router.push(`/dashboard/fields/${selectedFieldData.id}`)}
+                      >
                         <Edit3 size={14} className="mr-1" />
                         Edit Field
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => router.push(`/dashboard/fields/${selectedFieldData.id}`)}
+                      >
                         View Details
                         <ChevronRight size={14} className="ml-1" />
                       </Button>
