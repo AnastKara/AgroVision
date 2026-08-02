@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
   DragDropContext,
   Droppable,
@@ -54,6 +55,7 @@ const typeIcons: Record<string, any> = {
 };
 
 export default function TasksPage() {
+  const router = useRouter();
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [taskList, setTaskList] = useState(tasks);
 
@@ -106,7 +108,7 @@ export default function TasksPage() {
               List
             </button>
           </div>
-          <Button>
+<Button onClick={() => router.push("/dashboard/tasks/create")}>
             <Plus size={16} className="mr-1" />
             Add Task
           </Button>

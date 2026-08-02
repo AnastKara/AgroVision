@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 export default function AnimalsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
 
@@ -47,7 +49,7 @@ export default function AnimalsPage() {
           <h1 className="text-3xl font-bold">Animal Management</h1>
           <p className="text-muted-foreground mt-1">Track and manage your livestock</p>
         </div>
-        <Button>
+<Button onClick={() => router.push("/dashboard/animals/add")}>
           <Plus size={16} className="mr-1" />
           Add Animal
         </Button>
@@ -227,9 +229,9 @@ export default function AnimalsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button className="flex-1">Edit Profile</Button>
-                <Button variant="outline" className="flex-1">Medical Records</Button>
+<div className="flex gap-3 pt-2">
+                <Button className="flex-1" onClick={() => router.push("#")}>Edit Profile</Button>
+                <Button variant="outline" className="flex-1" onClick={() => router.push("#")}>Medical Records</Button>
               </div>
             </CardContent>
           </Card>

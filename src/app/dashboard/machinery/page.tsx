@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ const statusIcons = {
 };
 
 export default function MachineryPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
 
@@ -56,7 +58,7 @@ export default function MachineryPage() {
           <h1 className="text-3xl font-bold">Machinery</h1>
           <p className="text-muted-foreground mt-1">Manage your farm equipment and fleet</p>
         </div>
-        <Button>
+<Button onClick={() => router.push("/dashboard/machinery/add")}>
           <Plus size={16} className="mr-1" />
           Add Machine
         </Button>
@@ -225,9 +227,9 @@ export default function MachineryPage() {
                   </p>
                 </div>
 
-                <div className="flex gap-3">
-                  <Button className="flex-1">Assign Worker</Button>
-                  <Button variant="outline" className="flex-1">Service Log</Button>
+<div className="flex gap-3">
+                  <Button className="flex-1" onClick={() => router.push("/dashboard/workers")}>Assign Worker</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => router.push("#")}>Service Log</Button>
                 </div>
               </CardContent>
             </Card>

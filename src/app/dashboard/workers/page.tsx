@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const availabilityColors = {
 } as const;
 
 export default function WorkersPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
 
@@ -51,9 +53,9 @@ export default function WorkersPage() {
           <h1 className="text-3xl font-bold">Workers</h1>
           <p className="text-muted-foreground mt-1">Manage your farm workforce</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Worker Marketplace</Button>
-          <Button>
+<div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push("/dashboard/marketplace")}>Worker Marketplace</Button>
+          <Button onClick={() => router.push("/dashboard/workers/hire")}>
             <Plus size={16} className="mr-1" />
             Hire Worker
           </Button>
@@ -235,9 +237,9 @@ export default function WorkersPage() {
                 <span>ID: {selectedWorkerData.id}</span>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button className="flex-1">Assign Task</Button>
-                <Button variant="outline" className="flex-1">View Schedule</Button>
+<div className="flex gap-3 pt-2">
+                <Button className="flex-1" onClick={() => router.push("/dashboard/tasks")}>Assign Task</Button>
+                <Button variant="outline" className="flex-1" onClick={() => router.push("/dashboard/calendar")}>View Schedule</Button>
               </div>
             </CardContent>
           </Card>

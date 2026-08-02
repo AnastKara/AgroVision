@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
 const categories = ["All", "Seeds", "Fertilizers", "Animals", "Equipment", "Services", "Workers"];
 
 export default function MarketplacePage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -40,7 +42,7 @@ export default function MarketplacePage() {
           <h1 className="text-3xl font-bold">Marketplace</h1>
           <p className="text-muted-foreground mt-1">Buy and sell farming products, equipment, and services</p>
         </div>
-        <Button>
+<Button onClick={() => router.push("/dashboard/marketplace/sell")}>
           <Plus size={16} className="mr-1" />
           Sell Item
         </Button>
@@ -122,7 +124,7 @@ export default function MarketplacePage() {
                 </div>
               </div>
 
-              <Button className="w-full" size="sm">
+<Button className="w-full" size="sm" onClick={() => router.push(`/dashboard/marketplace?contact=${item.id}`)}>
                 Contact Seller
               </Button>
             </div>
