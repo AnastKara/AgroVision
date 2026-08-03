@@ -8,6 +8,7 @@
  */
 
 import { fields as mockFields, type Field } from "@/lib/data";
+import { cacheField, getCachedFields, removeCachedField } from "@/lib/offline/cache";
 
 // ============================================================
 // In-memory store (mocked). Swap with DB queries later.
@@ -94,9 +95,21 @@ function generateId(): string {
 
 /**
  * Get all fields
+ *
+ * On the client, hydrates the in-memory store from the IndexedDB offline
+ * cache so user-created fields survive page reloads and work offline.
+ * On the server, returns the in-memory store directly.
  */
 export async function getFields(): Promise<Field[]> {
   // Future: replace with Supabase query
+  if (typeof window !== "undefined") {
+    const cached = await getCachedFields();
+    if (cached.length > 0) {
+      // Merge cache into store so subsequent reads are consistent
+      fieldsStore = cached;
+      return [...cached];
+    }
+  }
   return [...fieldsStore];
 }
 
@@ -139,6 +152,11 @@ export async function createField(input: CreateFieldInput): Promise<Field> {
   // Future: replace with Supabase insert
   fieldsStore.push(newField);
 
+  // Sync to offline cache (client only)
+  if (typeof window !== "undefined") {
+    await cacheField(newField);
+  }
+
   return newField;
 }
 
@@ -168,6 +186,11 @@ export async function updateField(id: string, input: UpdateFieldInput): Promise<
   // Future: replace with Supabase update
   fieldsStore[index] = updated;
 
+  // Sync to offline cache (client only)
+  if (typeof window !== "undefined") {
+    await cacheField(updated);
+  }
+
   return updated;
 }
 
@@ -180,6 +203,12 @@ export async function deleteField(id: string): Promise<boolean> {
 
   // Future: replace with Supabase delete
   fieldsStore.splice(index, 1);
+
+  // Remove from offline cache (client only)
+  if (typeof window !== "undefined") {
+    await removeCachedField(id);
+  }
+
   return true;
 }
 

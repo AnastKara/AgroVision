@@ -1,4 +1,5 @@
 // Weather service types and helpers
+import { cacheWeather, getCachedWeather } from "@/lib/offline/cache";
 
 export interface WeatherCurrent {
   temperature: number;
@@ -124,6 +125,13 @@ export async function fetchWeatherData(
 
     if (!response.ok) {
       console.warn("Weather API returned error, using mock data:", response.statusText);
+      // Try offline cache first
+      const cached = await getCachedWeather();
+      if (cached) {
+        cachedWeather = cached;
+        lastFetchTime = now;
+        return { data: cached, isLive: false };
+      }
       return { data: mockWeatherData, isLive: false };
     }
 
@@ -133,9 +141,21 @@ export async function fetchWeatherData(
     cachedWeather = data;
     lastFetchTime = now;
 
+    // Persist to IndexedDB for offline access (client only)
+    if (typeof window !== "undefined") {
+      await cacheWeather(data);
+    }
+
     return { data, isLive: true };
   } catch (error) {
     console.warn("Failed to fetch weather data, using mock data:", error);
+    // Try offline cache first
+    const cached = await getCachedWeather();
+    if (cached) {
+      cachedWeather = cached;
+      lastFetchTime = now;
+      return { data: cached, isLive: false };
+    }
     return { data: mockWeatherData, isLive: false };
   }
 }
@@ -159,13 +179,29 @@ export async function fetchWeatherWithSoil(
 
     if (!response.ok) {
       console.warn("Weather+soil API returned error:", response.statusText);
+      // Try offline cache first
+      const cached = await getCachedWeather();
+      if (cached) {
+        return { data: cached, isLive: false };
+      }
       return { data: mockWeatherData, isLive: false };
     }
 
     const data: WeatherData = await response.json();
+
+    // Persist to IndexedDB for offline access (client only)
+    if (typeof window !== "undefined") {
+      await cacheWeather(data);
+    }
+
     return { data, isLive: true };
   } catch (error) {
     console.warn("Failed to fetch weather+soil data:", error);
+    // Try offline cache first
+    const cached = await getCachedWeather();
+    if (cached) {
+      return { data: cached, isLive: false };
+    }
     return { data: mockWeatherData, isLive: false };
   }
 }

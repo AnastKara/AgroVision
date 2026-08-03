@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "./theme-provider";
+import { usePwa } from "./pwa-provider";
 import {
   Search,
   Moon,
@@ -11,6 +12,9 @@ import {
   MessageSquare,
   Maximize2,
   Minimize2,
+  Wifi,
+  WifiOff,
+  Download,
 } from "lucide-react";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -19,6 +23,7 @@ import { Input } from "./ui/input";
 export default function TopNav() {
   const { theme, toggleTheme } = useTheme();
   const [fullscreen, setFullscreen] = useState(false);
+  const { isOnline, isInstallable, isInstalled, installPrompt } = usePwa();
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -49,6 +54,32 @@ export default function TopNav() {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
+        {/* Online/Offline Indicator */}
+        <div
+          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border ${
+            isOnline
+              ? "bg-green-500/10 text-green-500 border-green-500/20"
+              : "bg-red-500/10 text-red-500 border-red-500/20"
+          }`}
+          title={isOnline ? "Online" : "Offline — showing cached data"}
+        >
+          {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
+          <span>{isOnline ? "Online" : "Offline"}</span>
+        </div>
+
+        {/* Install App Button */}
+        {isInstallable && !isInstalled && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={installPrompt}
+            className="hidden md:flex items-center gap-1.5 rounded-xl"
+          >
+            <Download size={14} />
+            Install
+          </Button>
+        )}
+
         {/* AI Assistant Quick Button */}
         <Button
           variant="ghost"
