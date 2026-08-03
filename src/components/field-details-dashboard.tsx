@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { formatNumber } from "@/lib/utils";
 import type { Field } from "@/lib/data";
+import type { AnalyticsResult } from "@/lib/ndvi-analytics";
+import NdvAnalyticsDashboard from "@/components/ndvi-analytics-dashboard";
 import {
   Sprout,
   Ruler,
@@ -34,6 +36,7 @@ import {
   AlertTriangle,
   History,
   MapPin,
+  LineChart as LineChartIcon,
 } from "lucide-react";
 
 interface FieldDetailsDashboardProps {
@@ -97,9 +100,13 @@ interface FieldDetailsDashboardProps {
   agroMonitoringConfigured?: boolean;
   /** Callback to refresh data */
   onRefresh?: () => void;
+  /** Predictive analytics result (NDVI timeline, yield forecast) */
+  analytics?: AnalyticsResult | null;
+  /** Whether analytics is loading */
+  analyticsLoading?: boolean;
 }
 
-const weatherIcons: Record<string, any> = {
+const weatherIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Sunny: Sun,
   "Partly Cloudy": CloudSun,
   Cloudy: Cloud,
@@ -159,14 +166,17 @@ export default function FieldDetailsDashboard({
   lastUpdate,
   agroMonitoringConfigured = false,
   onRefresh,
+  analytics,
+  analyticsLoading,
 }: FieldDetailsDashboardProps) {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "vegetation" | "soil" | "weather" | "history"
+    "overview" | "vegetation" | "soil" | "weather" | "history" | "analytics"
   >("overview");
 
   const current = weather?.current;
   const forecast = weather?.forecast || [];
   const ConditionIcon = current ? weatherIcons[current.condition] || Sun : Sun;
+  const isOverviewTab = activeTab === "overview";
 
   return (
     <div className="space-y-6">
@@ -214,6 +224,7 @@ export default function FieldDetailsDashboard({
             ["soil", "Soil", Mountain],
             ["weather", "Weather", CloudSun],
             ["history", "History", History],
+            ["analytics", "Predictive Analytics", LineChartIcon],
           ] as const
         ).map(([key, label, Icon]) => (
           <Button
@@ -876,8 +887,34 @@ export default function FieldDetailsDashboard({
         </motion.div>
       )}
 
+      {/* ===================== PREDICTIVE ANALYTICS TAB ===================== */}
+      {!loading && activeTab === "analytics" && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {!agroMonitoringConfigured ? (
+            <Card>
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <LineChartIcon size={40} className="mx-auto mb-3 opacity-50" />
+                <p className="font-medium mb-1">AgroMonitoring not configured</p>
+                <p className="text-sm">
+                  Add AGROMONITORING_API_KEY to your environment variables to enable predictive analytics.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <NdvAnalyticsDashboard
+              analytics={analytics ?? null}
+              loading={analyticsLoading}
+              fieldName={field.name}
+            />
+          )}
+        </motion.div>
+      )}
+
       {/* Not configured banner for overview */}
-      {!agroMonitoringConfigured && activeTab === "overview" && (
+      {!agroMonitoringConfigured && isOverviewTab && (
         <div className="glass rounded-xl p-4 flex items-start gap-3 border-primary/20 bg-primary/5">
           <Info size={16} className="text-primary mt-0.5 flex-shrink-0" />
           <div>

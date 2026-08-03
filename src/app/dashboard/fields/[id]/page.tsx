@@ -21,6 +21,7 @@ import {
   sensorTypeInfo,
 } from "@/lib/sensor-data";
 import type { Field } from "@/lib/data";
+import type { AnalyticsResult } from "@/lib/ndvi-analytics";
 import {
   ArrowLeft,
   MapPin,
@@ -103,6 +104,8 @@ export default function FieldDetailsPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [history, setHistory] = useState<HistoryItem[] | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsResult | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   const agroMonitoringConfigured = !!process.env.NEXT_PUBLIC_AGROMONITORING_ENABLED;
 
@@ -192,6 +195,26 @@ export default function FieldDetailsPage() {
           }
 
           setLastUpdate(new Date().toISOString());
+
+          // Fetch predictive analytics (NDVI timeline + yield forecast)
+          try {
+            setAnalyticsLoading(true);
+            const analyticsRes = await fetch(
+              `/api/agromonitoring/satellite?polygonId=${encodeURIComponent(
+                fieldData.agroMonitoringId
+              )}&cropType=${encodeURIComponent(fieldData.cropType)}&areaHa=${fieldData.area}&health=${fieldData.health}`
+            );
+            if (analyticsRes.ok) {
+              const analyticsData = await analyticsRes.json();
+              setAnalytics(analyticsData);
+            } else {
+              console.warn("Failed to fetch satellite analytics:", analyticsRes.status);
+            }
+          } catch (analyticsError) {
+            console.warn("Failed to load satellite analytics:", analyticsError);
+          } finally {
+            setAnalyticsLoading(false);
+          }
         } catch (agroError) {
           console.warn("Failed to load AgroMonitoring data:", agroError);
         }
@@ -319,6 +342,8 @@ export default function FieldDetailsPage() {
         lastUpdate={lastUpdate}
         agroMonitoringConfigured={agroMonitoringConfigured}
         onRefresh={loadData}
+        analytics={analytics}
+        analyticsLoading={analyticsLoading}
       />
 
       {/* Connected Sensors */}
