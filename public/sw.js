@@ -8,7 +8,7 @@
  * - Cache-first strategy for static assets (icons, fonts, images)
  */
 
-const CACHE_VERSION = "agrovision-v2";
+const CACHE_VERSION = "agrovision-v3";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -67,6 +67,13 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+
+  // Never intercept Next.js development assets. Turbopack changes these files
+  // during Fast Refresh; serving an older cached chunk causes hydration errors
+  // when it is paired with newly rendered server HTML.
+  if (url.origin === self.location.origin && url.pathname.startsWith("/_next/")) {
+    return;
+  }
 
   // Skip cross-origin requests (e.g., OpenWeatherMap icons, Leaflet tiles)
   if (url.origin !== self.location.origin) {

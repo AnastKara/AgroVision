@@ -20,11 +20,29 @@ export const currencyCodes =
     : ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
 
 export function formatCurrencyValue(amount: number, currency: string) {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+const currencyNames = new Intl.DisplayNames(["en"], { type: "currency" });
+
+export function getCurrencyName(currency: string) {
+  return currencyNames.of(currency) ?? currency;
+}
+
+export function getCurrencySymbol(currency: string) {
+  const part = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    currencyDisplay: "narrowSymbol",
+  })
+    .formatToParts(0)
+    .find(({ type }) => type === "currency");
+
+  return part?.value ?? currency;
 }
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {

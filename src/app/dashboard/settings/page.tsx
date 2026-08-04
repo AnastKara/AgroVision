@@ -9,7 +9,12 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
 import { useUnits, type UnitSystem } from "@/components/units-provider";
-import { currencyCodes, useCurrency } from "@/components/currency-provider";
+import {
+  currencyCodes,
+  getCurrencyName,
+  getCurrencySymbol,
+  useCurrency,
+} from "@/components/currency-provider";
 import {
   Settings,
   Moon,
@@ -117,16 +122,27 @@ export default function SettingsPage() {
 
                 <div>
                   <label htmlFor="currency" className="text-sm font-medium mb-3 block">Currency</label>
-                  <select
-                    id="currency"
-                    value={currency}
-                    onChange={(event) => setCurrency(event.target.value)}
-                    className="w-full max-w-sm h-11 rounded-xl border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  >
-                    {currencyCodes.map((code) => (
-                      <option key={code} value={code}>{code}</option>
-                    ))}
-                  </select>
+                  <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
+                    <select
+                      id="currency"
+                      value={currency}
+                      onChange={(event) => setCurrency(event.target.value)}
+                      className="flex-1 h-11 rounded-xl border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      {currencyCodes.map((code) => (
+                        <option key={code} value={code}>{code} — {getCurrencyName(code)}</option>
+                      ))}
+                    </select>
+                    <div className="min-w-56 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 flex items-center gap-3" aria-live="polite">
+                      <span className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xl font-bold">
+                        {getCurrencySymbol(currency)}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium">{getCurrencyName(currency)}</p>
+                        <p className="text-xs text-muted-foreground">{currency} · {getCurrencySymbol(currency)}</p>
+                      </div>
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-2">Changes how monetary values are displayed across the dashboard.</p>
                 </div>
 
