@@ -16,7 +16,10 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self'",
+            // This policy applies to the service-worker context. Allow the
+            // external image/API hosts that the worker fetches and caches.
+            value:
+              "default-src 'self'; script-src 'self'; connect-src 'self' https://tiles.maps.eox.at https://*.tile.openstreetmap.org https://api.openweathermap.org https://*.openweathermap.org; img-src 'self' data: https://tiles.maps.eox.at https://*.tile.openstreetmap.org https://openweathermap.org https://*.openweathermap.org",
           },
         ],
       },

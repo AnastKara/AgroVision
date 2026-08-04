@@ -33,9 +33,9 @@ const PwaContext = createContext<PwaContextType>({
 });
 
 export function PwaProvider({ children }: { children: ReactNode }) {
-  const [isOnline, setIsOnline] = useState<boolean>(
-    typeof navigator !== "undefined" ? navigator.onLine : true
-  );
+  // Keep the initial client render identical to the server render. The actual
+  // browser connection state is applied after hydration below.
+  const [isOnline, setIsOnline] = useState<boolean>(true);
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
@@ -75,11 +75,13 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+    const statusTimer = window.setTimeout(() => setIsOnline(navigator.onLine), 0);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
     return () => {
+      window.clearTimeout(statusTimer);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };

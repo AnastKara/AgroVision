@@ -27,8 +27,10 @@ import {
   Scissors,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { formatWeight, useUnits } from "@/components/units-provider";
 
 export default function AnimalsPage() {
+  const { unitSystem } = useUnits();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
@@ -124,7 +126,7 @@ export default function AnimalsPage() {
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Weight size={12} />
-                  {animal.weight} kg
+                  {formatWeight(animal.weight, unitSystem)}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar size={12} />
@@ -179,7 +181,7 @@ export default function AnimalsPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: "Age", value: `${selectedAnimalData.age} years`, icon: Calendar },
-                  { label: "Weight", value: `${selectedAnimalData.weight} kg`, icon: Weight },
+                  { label: "Weight", value: formatWeight(selectedAnimalData.weight, unitSystem), icon: Weight },
                   { label: "Location", value: selectedAnimalData.location, icon: MapPin },
                   { label: "Status", value: selectedAnimalData.status, icon: Activity },
                 ].map((stat, i) => (

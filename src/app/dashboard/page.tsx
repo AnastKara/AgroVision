@@ -38,6 +38,8 @@ import { tasks, transactions, notifications, weatherData as mockWeatherData, ana
 import type { Field } from "@/lib/data";
 import { getFields } from "@/lib/fields-service";
 import { fetchWeatherData, WeatherData } from "@/lib/weather-service";
+import { formatArea, formatTemperature, useUnits } from "@/components/units-provider";
+import { useCurrency } from "@/components/currency-provider";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -79,6 +81,8 @@ const taskTypeIcons: Record<string, any> = {
 };
 
 export default function DashboardPage() {
+  const { unitSystem } = useUnits();
+  const { formatCurrency } = useCurrency();
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [fields, setFields] = useState<Field[]>([]);
@@ -157,9 +161,9 @@ export default function DashboardPage() {
       >
         {[
           { label: "Total Fields", value: totalFields, icon: Map, change: "+2 this month", color: "from-emerald-400 to-green-500" },
-          { label: "Total Area", value: `${totalArea} ha`, icon: Map, change: `Across ${totalFields} fields`, color: "from-blue-400 to-indigo-500" },
+          { label: "Total Area", value: formatArea(totalArea, unitSystem), icon: Map, change: `Across ${totalFields} fields`, color: "from-blue-400 to-indigo-500" },
           { label: "Farm Health", value: `${avgHealth}%`, icon: Activity, change: `${avgHealth > 70 ? '+5%' : '-3%'} vs last month`, color: avgHealth > 70 ? "from-green-400 to-emerald-500" : "from-yellow-400 to-orange-500" },
-          { label: "Est. Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, change: "+15% vs forecast", color: "from-purple-400 to-pink-500" },
+          { label: "Est. Revenue", value: formatCurrency(totalRevenue), icon: DollarSign, change: "+15% vs forecast", color: "from-purple-400 to-pink-500" },
         ].map((stat, i) => (
           <Card key={i} className="hover:shadow-lg transition-all duration-300">
             <CardContent className="p-5">
@@ -278,7 +282,7 @@ export default function DashboardPage() {
                 <Sun size={32} className="text-white" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{displayWeather.current.temperature}°C</p>
+                <p className="text-3xl font-bold">{formatTemperature(displayWeather.current.temperature, unitSystem)}</p>
                 <p className="text-sm text-muted-foreground">{displayWeather.current.condition}</p>
               </div>
             </div>
@@ -301,7 +305,7 @@ export default function DashboardPage() {
               <div className="glass rounded-xl p-3 text-center">
                 <Thermometer size={16} className="mx-auto mb-1 text-blue-500" />
                 <p className="text-xs text-muted-foreground">Feels Like</p>
-                <p className="font-semibold">{displayWeather.current.temperature - 2}°C</p>
+                <p className="font-semibold">{formatTemperature(displayWeather.current.temperature - 2, unitSystem)}</p>
               </div>
             </div>
             {/* Forecast */}
@@ -314,7 +318,7 @@ export default function DashboardPage() {
                     <div key={i} className="text-center">
                       <p className="text-xs text-muted-foreground">{day.day}</p>
                       <Icon size={16} className="mx-auto my-1 text-yellow-500" />
-                      <p className="text-xs font-medium">{day.temp}°</p>
+                      <p className="text-xs font-medium">{formatTemperature(day.temp, unitSystem)}</p>
                     </div>
                   );
                 })}
@@ -363,7 +367,7 @@ export default function DashboardPage() {
                         t.type === "income" ? "text-green-500" : "text-red-500"
                       }`}
                     >
-                      {t.type === "income" ? "+" : "-"}$ {t.amount.toLocaleString()}
+                      {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount)}
                     </p>
                     <Badge
                       variant={

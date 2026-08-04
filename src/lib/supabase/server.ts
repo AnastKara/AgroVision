@@ -7,7 +7,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 export async function createClient() {
   // Return null if Supabase is not configured
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === "your_supabase_project_url_here") {
-    return null as any;
+    return null;
   }
 
   const cookieStore = await cookies();

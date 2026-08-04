@@ -8,7 +8,7 @@
  * - Cache-first strategy for static assets (icons, fonts, images)
  */
 
-const CACHE_VERSION = "agrovision-v1";
+const CACHE_VERSION = "agrovision-v2";
 const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`;
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -81,13 +81,15 @@ self.addEventListener("fetch", (event) => {
           if (cached) return cached;
           return fetch(request)
             .then((response) => {
-              if (response.ok) {
+              if (response.ok || response.type === "opaque") {
                 const clone = response.clone();
                 caches.open(STATIC_CACHE).then((cache) => cache.put(request, clone));
               }
               return response;
             })
-            .catch(() => cached);
+            .catch(() =>
+              cached || new Response("Offline", { status: 503, statusText: "Offline" })
+            );
         })
       );
     }
@@ -147,7 +149,9 @@ self.addEventListener("fetch", (event) => {
             }
             return response;
           })
-          .catch(() => cached);
+          .catch(() =>
+            cached || new Response("Offline", { status: 503, statusText: "Offline" })
+          );
       })
     );
     return;
@@ -170,7 +174,13 @@ self.addEventListener("fetch", (event) => {
           caches.match(request).then((cached) => {
             if (cached) return cached;
             // Fall back to the cached home page for any navigation
-            return caches.match("/");
+            return caches
+              .match("/")
+              .then(
+                (homePage) =>
+                  homePage ||
+                  new Response("Offline", { status: 503, statusText: "Offline" })
+              );
           })
         )
     );

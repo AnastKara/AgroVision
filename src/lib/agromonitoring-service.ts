@@ -246,16 +246,14 @@ export async function getSoilHistory(
  * Search for satellite images in a date range
  */
 export async function searchSatelliteImages(
-  lat: string,
-  lon: string,
+  polygonId: string,
   start: number,
   end: number
 ): Promise<AMImageSearchResult[]> {
   return fetchFromAgro<AMImageSearchResult[]>("/image/search", {
     start: start.toString(),
     end: end.toString(),
-    lat,
-    lon,
+    polyid: polygonId,
   });
 }
 

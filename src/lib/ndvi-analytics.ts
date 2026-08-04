@@ -409,5 +409,3 @@ export function formatTrend(direction: string): string {
     default: return "No data";
   }
 }
-</content>
-</file>

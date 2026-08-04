@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
+import { useUnits, type UnitSystem } from "@/components/units-provider";
+import { currencyCodes, useCurrency } from "@/components/currency-provider";
 import {
   Settings,
   Moon,
@@ -21,14 +23,13 @@ import {
   Thermometer,
   Save,
   User,
-  Mail,
   Lock,
-  Monitor,
-  Smartphone,
 } from "lucide-react";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { unitSystem, setUnitSystem } = useUnits();
+  const { currency, setCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState("general");
 
   const tabs = [
@@ -37,6 +38,10 @@ export default function SettingsPage() {
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "security", label: "Security", icon: Shield },
     { id: "team", label: "Team", icon: Users },
+  ];
+  const unitOptions: { value: UnitSystem; label: string; icon: typeof Thermometer; desc: string }[] = [
+    { value: "metric", label: "Metric", icon: Thermometer, desc: "Celsius, hectares, kg" },
+    { value: "imperial", label: "Imperial", icon: Ruler, desc: "Fahrenheit, acres, lbs" },
   ];
 
   return (
@@ -111,6 +116,23 @@ export default function SettingsPage() {
                 <Separator />
 
                 <div>
+                  <label htmlFor="currency" className="text-sm font-medium mb-3 block">Currency</label>
+                  <select
+                    id="currency"
+                    value={currency}
+                    onChange={(event) => setCurrency(event.target.value)}
+                    className="w-full max-w-sm h-11 rounded-xl border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    {currencyCodes.map((code) => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-2">Changes how monetary values are displayed across the dashboard.</p>
+                </div>
+
+                <Separator />
+
+                <div>
                   <label className="text-sm font-medium mb-3 block">Language</label>
                   <div className="relative max-w-xs">
                     <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -127,19 +149,29 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="text-sm font-medium mb-3 block">Units</label>
-                  <div className="flex gap-3">
-                    {[
-                      { value: "metric", label: "Metric", icon: Thermometer, desc: "Celsius, hectares, kg" },
-                      { value: "imperial", label: "Imperial", icon: Ruler, desc: "Fahrenheit, acres, lbs" },
-                    ].map((u) => (
-                      <button
+                  <div className="flex gap-3" role="radiogroup" aria-label="Units">
+                    {unitOptions.map((u) => (
+                      <label
                         key={u.value}
-                        className="flex-1 p-4 rounded-2xl border border-border hover:border-muted-foreground/30 transition-all"
+                        data-testid={`unit-${u.value}`}
+                        className={`flex-1 p-4 rounded-2xl border-2 transition-all ${
+                          unitSystem === u.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-muted-foreground/30"
+                        } cursor-pointer`}
                       >
-                        <u.icon size={24} className="mb-2 text-muted-foreground" />
+                        <input
+                          type="radio"
+                          name="unit-system"
+                          value={u.value}
+                          checked={unitSystem === u.value}
+                          onChange={() => setUnitSystem(u.value)}
+                          className="sr-only"
+                        />
+                        <u.icon size={24} className={`mb-2 ${unitSystem === u.value ? "text-primary" : "text-muted-foreground"}`} />
                         <p className="text-sm font-medium">{u.label}</p>
                         <p className="text-xs text-muted-foreground mt-1">{u.desc}</p>
-                      </button>
+                      </label>
                     ))}
                   </div>
                 </div>

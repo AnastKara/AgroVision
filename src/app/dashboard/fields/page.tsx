@@ -14,8 +14,10 @@ import type { Field } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
 import { Sprout, Plus, Search, Droplets, Thermometer, Ruler, Activity, Calendar, DollarSign, TrendingUp, MapPin, Loader2, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { formatArea, formatTemperature, formatWeight, useUnits } from "@/components/units-provider";
 
 export default function FieldsPage() {
+  const { unitSystem } = useUnits();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedField, setSelectedField] = useState<string | null>(null);
@@ -176,7 +178,7 @@ export default function FieldsPage() {
                 <div className="glass rounded-xl p-2 text-center">
                   <Ruler size={12} className="mx-auto mb-1 text-purple-500" />
                   <p className="text-[10px] text-muted-foreground">Area</p>
-                  <p className="text-xs font-medium">{field.area} ha</p>
+                  <p className="text-xs font-medium">{formatArea(field.area, unitSystem)}</p>
                 </div>
               </div>
 
@@ -275,7 +277,7 @@ export default function FieldsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Fields", value: fields.length, icon: Sprout },
-          { label: "Total Area", value: `${fields.reduce((a, f) => a + f.area, 0)} ha`, icon: Ruler },
+          { label: "Total Area", value: formatArea(fields.reduce((a, f) => a + f.area, 0), unitSystem), icon: Ruler },
           { label: "Avg Health", value: `${avgHealth}%`, icon: Activity },
           { label: "Est. Revenue", value: `$${formatNumber(123000)}`, icon: DollarSign },
         ].map((stat, i) => (
@@ -329,12 +331,12 @@ export default function FieldsPage() {
               {/* Field Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { label: "Area", value: `${selectedFieldData.area} ha`, icon: Ruler },
+                  { label: "Area", value: formatArea(selectedFieldData.area, unitSystem), icon: Ruler },
                   { label: "Moisture", value: `${selectedFieldData.moisture}%`, icon: Droplets },
                   { label: "Nitrogen", value: `${selectedFieldData.nitrogen}%`, icon: Activity },
                   { label: "Growth Stage", value: selectedFieldData.growthStage, icon: Sprout },
-                  { label: "Expected Yield", value: `${formatNumber(selectedFieldData.expectedYield)} kg`, icon: TrendingUp },
-                  { label: "Temperature", value: "22°C", icon: Thermometer },
+                  { label: "Expected Yield", value: formatWeight(selectedFieldData.expectedYield, unitSystem), icon: TrendingUp },
+                  { label: "Temperature", value: formatTemperature(22, unitSystem), icon: Thermometer },
                 ].map((stat, i) => (
                   <div key={i} className="glass rounded-xl p-3">
                     <div className="flex items-center gap-2 mb-1">

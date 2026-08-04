@@ -58,13 +58,7 @@ export async function GET(request: Request) {
     const start = now - days * 24 * 60 * 60;
 
     // Search for satellite images in the date range
-    // polygon.center is [lng, lat]
-    const images = await searchSatelliteImages(
-      polygon.center[1].toString(),
-      polygon.center[0].toString(),
-      start,
-      now
-    );
+    const images = await searchSatelliteImages(polygon.id, start, now);
 
     // Fetch stats for each cloud-free, visible image
     const statsByImage = new Map<string, AMImageStats>();

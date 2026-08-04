@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import WeatherAlerts from "@/components/weather-alerts";
+import { formatTemperature, useUnits } from "@/components/units-provider";
 import {
   fetchWeatherWithSoil,
   fetchSatelliteData,
@@ -88,6 +89,7 @@ function getSoilMoistureColor(value: number | null): string {
 }
 
 export default function WeatherPage() {
+  const { unitSystem } = useUnits();
   const [weather, setWeather] = useState<WeatherData>(mockWeatherData);
   const [soilData, setSoilData] = useState<SoilData | null>(null);
   const [satelliteData, setSatelliteData] = useState<SatelliteIndex | null>(null);
@@ -187,11 +189,11 @@ export default function WeatherPage() {
                 </div>
                 <div>
                   <p className="text-6xl font-bold text-white">
-                    {current.temperature}°
+                    {formatTemperature(current.temperature, unitSystem)}
                   </p>
                   <p className="text-white/80 text-lg mt-1">{current.condition}</p>
                   <p className="text-white/60 text-sm mt-0.5">
-                    Feels like {current.feelsLike}°
+                    Feels like {formatTemperature(current.feelsLike, unitSystem)}
                   </p>
                 </div>
               </div>
@@ -318,7 +320,7 @@ variant={
                     <Thermometer size={16} className="text-orange-500" />
                     <div>
                       <p className="text-xs text-muted-foreground">Surface Temperature</p>
-                      <p className="text-sm font-semibold">{Math.round(soil.surfaceTemp)}°C</p>
+                      <p className="text-sm font-semibold">{formatTemperature(soil.surfaceTemp, unitSystem)}</p>
                     </div>
                   </div>
                 )}
@@ -438,12 +440,12 @@ variant={
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto mb-3">
                       <DayIcon size={20} className="text-primary" />
                     </div>
-                    <p className="text-xl font-bold">{day.temp}°</p>
+                    <p className="text-xl font-bold">{formatTemperature(day.temp, unitSystem)}</p>
                     <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
                       <TrendingUp size={10} className="text-red-500" />
-                      <span>{day.tempMax}°</span>
+                      <span>{formatTemperature(day.tempMax, unitSystem)}</span>
                       <TrendingDown size={10} className="text-blue-500" />
-                      <span>{day.tempMin}°</span>
+                      <span>{formatTemperature(day.tempMin, unitSystem)}</span>
                     </div>
                     <Separator className="my-3" />
                     <div className="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground">
@@ -501,7 +503,7 @@ variant={
                 return (
                   <div key={i} className="flex items-center gap-3">
                     <span className="text-xs font-medium w-8 text-right">{day.day}</span>
-                    <span className="text-[10px] text-blue-500 w-6 text-right">{day.tempMin}°</span>
+                    <span className="text-[10px] text-blue-500 w-10 text-right">{formatTemperature(day.tempMin, unitSystem)}</span>
                     <div className="flex-1 h-2 rounded-full bg-muted relative overflow-hidden">
                       <div
                         className="absolute h-full rounded-full bg-gradient-to-r from-blue-500 via-green-500 to-red-500"
@@ -511,7 +513,7 @@ variant={
                         }}
                       />
                     </div>
-                    <span className="text-[10px] text-red-500 w-6">{day.tempMax}°</span>
+                    <span className="text-[10px] text-red-500 w-10">{formatTemperature(day.tempMax, unitSystem)}</span>
                   </div>
                 );
               })}

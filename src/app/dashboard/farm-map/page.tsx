@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getFields } from "@/lib/fields-service";
 import type { Field } from "@/lib/data";
-import { getHealthColor, formatNumber } from "@/lib/utils";
+import { getHealthColor } from "@/lib/utils";
+import { formatArea, formatWeight, useUnits } from "@/components/units-provider";
 import {
   MapPin,
   Plus,
@@ -46,6 +47,7 @@ const healthTextColor = (health: number) => {
 };
 
 export default function FarmMapPage() {
+  const { unitSystem } = useUnits();
   const router = useRouter();
   const [fields, setFields] = useState<Field[]>([]);
   const [selectedField, setSelectedField] = useState<string | null>(null);
@@ -202,11 +204,11 @@ export default function FarmMapPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label: "Area", value: `${selectedFieldData.area} ha`, icon: Ruler },
+                        { label: "Area", value: formatArea(selectedFieldData.area, unitSystem), icon: Ruler },
                         { label: "Moisture", value: `${selectedFieldData.moisture}%`, icon: Droplets },
                         { label: "Nitrogen", value: `${selectedFieldData.nitrogen}%`, icon: Activity },
                         { label: "Growth Stage", value: selectedFieldData.growthStage, icon: Sprout },
-                        { label: "Expected Yield", value: `${formatNumber(selectedFieldData.expectedYield)} kg`, icon: Crop },
+                        { label: "Expected Yield", value: formatWeight(selectedFieldData.expectedYield, unitSystem), icon: Crop },
                         { label: "Last Irrigation", value: selectedFieldData.lastIrrigation, icon: Droplets },
                       ].map((stat, i) => (
                         <div key={i} className="glass rounded-xl p-3">
@@ -311,7 +313,7 @@ export default function FarmMapPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">{field.cropType}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <Ruler size={12} className="text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">{field.area} ha</span>
+                  <span className="text-xs text-muted-foreground">{formatArea(field.area, unitSystem)}</span>
                 </div>
               </motion.button>
             ))}

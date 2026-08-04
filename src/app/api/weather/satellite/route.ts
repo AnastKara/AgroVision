@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { searchSatelliteImages, getImageStats } from "@/lib/agromonitoring-service";
+import {
+  getImageStats,
+  listPolygons,
+  searchSatelliteImages,
+} from "@/lib/agromonitoring-service";
 
 /**
  * GET /api/weather/satellite
@@ -30,8 +34,27 @@ export async function GET(request: Request) {
     const now = Math.floor(Date.now() / 1000);
     const start = now - days * 24 * 60 * 60;
 
-    // Search for satellite images in the date range
-    const images = await searchSatelliteImages(lat, lon, start, now);
+    // AgroMonitoring imagery is associated with a registered polygon, not a
+    // free-form latitude/longitude pair. Use the nearest saved farm polygon.
+    const polygons = await listPolygons();
+    const nearestPolygon = polygons.sort(
+      (a, b) =>
+        (a.center[1] - Number(lat)) ** 2 + (a.center[0] - Number(lon)) ** 2 -
+        ((b.center[1] - Number(lat)) ** 2 + (b.center[0] - Number(lon)) ** 2)
+    )[0];
+
+    if (!nearestPolygon) {
+      return NextResponse.json({
+        ndvi: null,
+        evi: null,
+        ndmi: null,
+        imageUrl: null,
+        date: null,
+        message: "Add a field to enable satellite imagery.",
+      });
+    }
+
+    const images = await searchSatelliteImages(nearestPolygon.id, start, now);
 
     // Get the latest image with NDVI data
     const latestImage = images

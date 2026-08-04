@@ -128,6 +128,8 @@ export default function NdvAnalyticsDashboard({
       chartData.push({
         date: new Date(f.date + "T00:00:00").toLocaleDateString(),
         ndvi: f.value,
+        evi: null,
+        ndmi: null,
         forecast: true,
       });
     });

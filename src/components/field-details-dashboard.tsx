@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { formatNumber } from "@/lib/utils";
 import type { Field } from "@/lib/data";
 import type { AnalyticsResult } from "@/lib/ndvi-analytics";
 import NdvAnalyticsDashboard from "@/components/ndvi-analytics-dashboard";
+import { formatArea, formatTemperature, formatWeight, useUnits } from "@/components/units-provider";
 import {
   Sprout,
   Ruler,
@@ -169,6 +169,7 @@ export default function FieldDetailsDashboard({
   analytics,
   analyticsLoading,
 }: FieldDetailsDashboardProps) {
+  const { unitSystem } = useUnits();
   const [activeTab, setActiveTab] = useState<
     "overview" | "vegetation" | "soil" | "weather" | "history" | "analytics"
   >("overview");
@@ -189,7 +190,7 @@ export default function FieldDetailsDashboard({
           <div>
             <h2 className="text-2xl font-bold">{field.name}</h2>
             <p className="text-sm text-muted-foreground">
-              {field.cropType} · {field.area} ha
+              {field.cropType} · {formatArea(field.area, unitSystem)}
             </p>
           </div>
         </div>
@@ -260,7 +261,7 @@ export default function FieldDetailsDashboard({
         >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: "Area", value: `${field.area} ha`, icon: Ruler, color: "text-purple-500" },
+              { label: "Area", value: formatArea(field.area, unitSystem), icon: Ruler, color: "text-purple-500" },
               { label: "Health", value: `${field.health}%`, icon: Activity, color: field.health >= 75 ? "text-green-500" : field.health >= 50 ? "text-yellow-500" : "text-red-500" },
               { label: "Moisture", value: `${field.moisture}%`, icon: Droplets, color: "text-blue-500" },
               { label: "Nitrogen", value: `${field.nitrogen}%`, icon: Sprout, color: "text-emerald-500" },
@@ -314,7 +315,7 @@ export default function FieldDetailsDashboard({
                   <div className="glass rounded-xl p-3 text-center">
                     <Ruler size={14} className="mx-auto mb-1 text-purple-500" />
                     <p className="text-[10px] text-muted-foreground">Area</p>
-                    <p className="text-sm font-bold">{field.area} ha</p>
+                    <p className="text-sm font-bold">{formatArea(field.area, unitSystem)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -335,7 +336,7 @@ export default function FieldDetailsDashboard({
                 </div>
                 <div className="glass rounded-xl p-3 flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Expected Yield</span>
-                  <span className="font-semibold">{formatNumber(field.expectedYield)} kg</span>
+                  <span className="font-semibold">{formatWeight(field.expectedYield, unitSystem)}</span>
                 </div>
                 <div className="glass rounded-xl p-3 flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Last Irrigation</span>
@@ -381,7 +382,7 @@ export default function FieldDetailsDashboard({
                     <div className="flex items-center gap-3">
                       <ConditionIcon size={20} className="text-yellow-500" />
                       <div>
-                        <p className="text-sm font-semibold">{current.temperature}°C</p>
+                        <p className="text-sm font-semibold">{formatTemperature(current.temperature, unitSystem)}</p>
                         <p className="text-[10px] text-muted-foreground">{current.condition}</p>
                       </div>
                       <div className="ml-auto text-right">
@@ -677,7 +678,7 @@ export default function FieldDetailsDashboard({
                   {soil.surfaceTemp !== null ? (
                     <div className="glass rounded-2xl p-6 text-center">
                       <Thermometer size={32} className="mx-auto mb-3 text-orange-500" />
-                      <p className="text-4xl font-bold">{Math.round(soil.surfaceTemp)}°C</p>
+                      <p className="text-4xl font-bold">{formatTemperature(soil.surfaceTemp, unitSystem)}</p>
                       <p className="text-sm text-muted-foreground mt-1">Surface Temperature</p>
                     </div>
                   ) : (
@@ -728,10 +729,10 @@ export default function FieldDetailsDashboard({
                         <ConditionIcon size={40} className="text-white" />
                       </div>
                       <div>
-                        <p className="text-5xl font-bold">{current.temperature}°</p>
+                        <p className="text-5xl font-bold">{formatTemperature(current.temperature, unitSystem)}</p>
                         <p className="text-muted-foreground mt-1">{current.condition}</p>
                         <p className="text-xs text-muted-foreground">
-                          Feels like {current.feelsLike}°
+                          Feels like {formatTemperature(current.feelsLike, unitSystem)}
                         </p>
                       </div>
                     </div>
@@ -778,12 +779,12 @@ export default function FieldDetailsDashboard({
                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center mx-auto my-3">
                               <DayIcon size={18} className="text-primary" />
                             </div>
-                            <p className="text-xl font-bold">{day.temp}°</p>
+                            <p className="text-xl font-bold">{formatTemperature(day.temp, unitSystem)}</p>
                             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-1">
                               <TrendingUp size={10} className="text-red-500" />
-                              <span>{day.tempMax}°</span>
+                              <span>{formatTemperature(day.tempMax, unitSystem)}</span>
                               <TrendingDown size={10} className="text-blue-500" />
-                              <span>{day.tempMin}°</span>
+                              <span>{formatTemperature(day.tempMin, unitSystem)}</span>
                             </div>
                             <Separator className="my-3" />
                             <div className="flex justify-center gap-2 text-[10px] text-muted-foreground">

@@ -21,7 +21,6 @@ import {
   getTransactionCategories,
   getTransactionsByMonth,
   getCashFlowProjection,
-  formatCurrency,
   type FinancialAccount,
   type Invoice,
   type RecurringTransaction,
@@ -29,6 +28,7 @@ import {
   type CashFlowProjection,
 } from "@/lib/finance-data";
 import { formatDate } from "@/lib/utils";
+import { useCurrency } from "@/components/currency-provider";
 import {
   DollarSign,
   TrendingUp,
@@ -94,6 +94,7 @@ const recurringStatusVariant: Record<string, "success" | "warning" | "secondary"
 };
 
 export default function FinancePage() {
+  const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("All");
