@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import {
 } from "@/lib/sensor-data";
 import {
   Radio,
-  Plus,
   Search,
   AlertTriangle,
   BatteryLow,
@@ -44,6 +44,8 @@ import {
   Calendar,
   CheckCircle2,
   Signal,
+  Plug,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   AreaChart,
@@ -153,16 +155,24 @@ export default function SensorsPage() {
           <p className="text-muted-foreground mt-1">
             Real-time IoT readings from soil, weather, and crop sensors across your farm
           </p>
-        </div>
+</div>
         <div className="flex items-center gap-2">
           <Badge variant="success" className="gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
             Live
           </Badge>
-          <Button>
-            <Plus size={16} className="mr-1" />
-            Add Sensor
-          </Button>
+          <Link href="/dashboard/sensors/dashboard">
+            <Button variant="outline">
+              <LayoutDashboard size={16} className="mr-1" />
+              Monitoring Dashboard
+            </Button>
+          </Link>
+          <Link href="/dashboard/sensors/connect">
+            <Button>
+              <Plug size={16} className="mr-1" />
+              Connect Sensors
+            </Button>
+          </Link>
         </div>
       </div>
 

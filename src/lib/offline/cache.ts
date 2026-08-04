@@ -17,6 +17,10 @@ import {
 } from "./db";
 import type { Field } from "@/lib/data";
 import type { WeatherData, SatelliteIndex } from "@/lib/weather-service";
+import type {
+  SensorIntegration,
+  SensorSyncLog,
+} from "@/lib/sensor-integrations";
 
 // ============================================================
 // Fields cache
@@ -175,6 +179,88 @@ export async function getCachedSetting<T>(
 }
 
 // ============================================================
+// Sensor integrations cache
+// ============================================================
+
+/**
+ * Cache all sensor integrations in IndexedDB.
+ */
+export async function cacheIntegrations(integrations: SensorIntegration[]): Promise<void> {
+  if (!isIndexedDBAvailable()) return;
+  try {
+    await putRecords("integrations", integrations);
+  } catch (error) {
+    console.warn("Failed to cache integrations:", error);
+  }
+}
+
+/**
+ * Get all cached sensor integrations.
+ */
+export async function getCachedIntegrations(): Promise<SensorIntegration[]> {
+  if (!isIndexedDBAvailable()) return [];
+  try {
+    return await getAllRecords<SensorIntegration>("integrations");
+  } catch (error) {
+    console.warn("Failed to read cached integrations:", error);
+    return [];
+  }
+}
+
+/**
+ * Cache a single integration (upsert).
+ */
+export async function cacheIntegration(integration: SensorIntegration): Promise<void> {
+  if (!isIndexedDBAvailable()) return;
+  try {
+    await putRecords("integrations", [integration]);
+  } catch (error) {
+    console.warn("Failed to cache integration:", error);
+  }
+}
+
+/**
+ * Remove an integration from the cache.
+ */
+export async function removeCachedIntegration(id: string): Promise<void> {
+  if (!isIndexedDBAvailable()) return;
+  try {
+    await deleteRecord("integrations", id);
+  } catch (error) {
+    console.warn("Failed to remove cached integration:", error);
+  }
+}
+
+// ============================================================
+// Sensor sync logs cache
+// ============================================================
+
+/**
+ * Cache a sensor sync log (upsert).
+ */
+export async function cacheSensorSyncLog(log: SensorSyncLog): Promise<void> {
+  if (!isIndexedDBAvailable()) return;
+  try {
+    await putRecords("sensor_sync_logs", [log]);
+  } catch (error) {
+    console.warn("Failed to cache sensor sync log:", error);
+  }
+}
+
+/**
+ * Get all cached sensor sync logs.
+ */
+export async function getCachedSensorSyncLogs(): Promise<SensorSyncLog[]> {
+  if (!isIndexedDBAvailable()) return [];
+  try {
+    return await getAllRecords<SensorSyncLog>("sensor_sync_logs");
+  } catch (error) {
+    console.warn("Failed to read cached sensor sync logs:", error);
+    return [];
+  }
+}
+
+// ============================================================
 // Utility
 // ============================================================
 
@@ -183,7 +269,14 @@ export async function getCachedSetting<T>(
  */
 export async function clearAllCaches(): Promise<void> {
   if (!isIndexedDBAvailable()) return;
-  const stores: StoreName[] = ["fields", "weather", "satellite", "settings"];
+  const stores: StoreName[] = [
+    "fields",
+    "weather",
+    "satellite",
+    "settings",
+    "integrations",
+    "sensor_sync_logs",
+  ];
   for (const store of stores) {
     try {
       await clearStore(store);

@@ -30,7 +30,11 @@ import {
   Save,
   User,
   Lock,
+  Radio,
+  Plug,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -39,12 +43,13 @@ export default function SettingsPage() {
   const { language, setLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState("general");
 
-  const tabs = [
+const tabs = [
     { id: "general", label: t("tabs.general"), icon: Settings },
     { id: "profile", label: t("tabs.profile"), icon: User },
     { id: "notifications", label: t("tabs.notifications"), icon: Bell },
     { id: "security", label: t("tabs.security"), icon: Shield },
     { id: "team", label: t("tabs.team"), icon: Users },
+    { id: "sensors", label: "Sensors", icon: Radio },
   ];
   const unitOptions: { value: UnitSystem; label: string; icon: typeof Thermometer; desc: string }[] = [
     { value: "metric", label: "Metric", icon: Thermometer, desc: "Celsius, hectares, kg" },
@@ -296,6 +301,67 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-end">
                     <Button>Update Password</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Sensors */}
+          {activeTab === "sensors" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Radio size={16} className="text-primary" />
+                  Sensors & Integrations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="glass rounded-2xl p-4 bg-primary/5 border border-primary/20">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Plug size={18} className="text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+<p className="text-sm font-medium">Connect third-party farmer sensors</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Link your existing agricultural sensors from METOS, Davis Instruments, CropX,
+                        Sencrop, and John Deere — or use our Custom API for any other provider.
+                        Credentials are encrypted before storage and synchronizations are logged.
+                      </p>
+                      <Link href="/dashboard/sensors/connect">
+                        <Button size="sm" className="mt-3">
+                          Connect Sensors
+                          <ArrowRight size={14} className="ml-1" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                    SUPPORTED PROVIDERS
+                  </h4>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      "METOS",
+                      "Davis Instruments",
+                      "CropX",
+                      "Sencrop",
+                      "John Deere",
+                      "Custom API",
+                    ].map((provider) => (
+                      <div
+                        key={provider}
+                        className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/50"
+                      >
+                        <span className="text-sm font-medium">{provider}</span>
+                        <Badge variant="secondary" className="text-[10px]">
+                          Available
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>

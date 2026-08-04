@@ -9,9 +9,22 @@
 const DB_NAME = "agrovision-offline";
 const DB_VERSION = 1;
 
-export type StoreName = "fields" | "weather" | "satellite" | "settings";
+export type StoreName =
+  | "fields"
+  | "weather"
+  | "satellite"
+  | "settings"
+  | "integrations"
+  | "sensor_sync_logs";
 
-const STORES: StoreName[] = ["fields", "weather", "satellite", "settings"];
+const STORES: StoreName[] = [
+  "fields",
+  "weather",
+  "satellite",
+  "settings",
+  "integrations",
+  "sensor_sync_logs",
+];
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
