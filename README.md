@@ -1,7 +1,8 @@
-<<<<<<< HEAD
-=======
-<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/5d5f224b-1f19-46cd-9587-6fb53cca812e" />
->>>>>>> a49381faa0e3d3933abc16948eeed57c90b7001f
+![AgroVision](https://github.com/user-attachments/assets/5d5f224b-1f19-46cd-9587-6fb53cca812e)
+
+# AgroVision
+
+AgroVision is a smart farm management platform — a digital twin of your farm. Manage your fields, animals, machinery, workers, and finances from one intelligent platform powered by AI and real-time data.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

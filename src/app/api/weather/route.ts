@@ -52,56 +52,62 @@ export async function GET(request: Request) {
     }
   }
 
-  // -------------------------------------------------------
-  // FALLBACK: OpenWeatherMap (existing implementation)
+// -------------------------------------------------------
+  // FALLBACK: OpenWeatherMap (only if key is configured)
   // -------------------------------------------------------
   const owmApiKey = process.env.OPENWEATHER_API_KEY;
 
-  if (!owmApiKey) {
-    return NextResponse.json(
-      { error: "No weather API key configured" },
-      { status: 400 }
-    );
-  }
+  if (owmApiKey) {
+    try {
+      // Try One Call API 3.0 first
+      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric&exclude=minutely,hourly,alerts`;
+      const response = await fetch(url);
 
-  try {
-    // Try One Call API 3.0 first
-    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric&exclude=minutely,hourly,alerts`;
-    const response = await fetch(url);
+      // If OneCall 3.0 fails (401/403), fall back to 2.5 endpoints
+      if (response.status === 401 || response.status === 403) {
+        const [currentRes, forecastRes] = await Promise.all([
+          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
+          fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
+        ]);
 
-    // If OneCall 3.0 fails (401/403), fall back to 2.5 endpoints
-    if (response.status === 401 || response.status === 403) {
-      const [currentRes, forecastRes] = await Promise.all([
-        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
-        fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${owmApiKey}&units=metric`),
-      ]);
+        if (!currentRes.ok) {
+          return NextResponse.json(
+            { error: "Weather API request failed", status: currentRes.status },
+            { status: currentRes.status }
+          );
+        }
 
-      if (!currentRes.ok) {
+        const currentData = await currentRes.json();
+        const forecastData = await forecastRes.json();
+        const daily = processForecastData(forecastData);
+
+        const weather = buildOpenWeatherResponse(currentData, daily);
+        return NextResponse.json(formatWeatherData(weather));
+      }
+
+      if (!response.ok) {
         return NextResponse.json(
-          { error: "Weather API request failed", status: currentRes.status },
-          { status: currentRes.status }
+          { error: "Weather API request failed", status: response.status },
+          { status: response.status }
         );
       }
 
-      const currentData = await currentRes.json();
-      const forecastData = await forecastRes.json();
-      const daily = processForecastData(forecastData);
-
-      const weather = buildOpenWeatherResponse(currentData, daily);
-      return NextResponse.json(formatWeatherData(weather));
+      const data = await response.json();
+      return NextResponse.json(formatWeatherData(data));
+    } catch (error) {
+      console.warn("OpenWeatherMap API failed, falling back to Open-Meteo:", error);
+      // Fall through to Open-Meteo fallback
     }
+  }
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Weather API request failed", status: response.status },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(formatWeatherData(data));
+  // -------------------------------------------------------
+  // FINAL FALLBACK: Open-Meteo (keyless, works out of the box)
+  // -------------------------------------------------------
+  try {
+    const openMeteoData = await fetchOpenMeteo(lat, lon);
+    return NextResponse.json(openMeteoData);
   } catch (error) {
-    console.error("Weather API error:", error);
+    console.error("Open-Meteo API error:", error);
     return NextResponse.json(
       { error: "Failed to fetch weather data" },
       { status: 500 }
@@ -374,5 +380,119 @@ function buildOpenWeatherResponse(
       pop: 0,
     },
     daily,
+  };
+}
+
+// ============================================================
+// Open-Meteo fallback (keyless, no API key required)
+// ============================================================
+
+interface OpenMeteoResponse {
+  timezone: string;
+  current: {
+    temperature_2m: number;
+    relative_humidity_2m: number;
+    apparent_temperature: number;
+    weather_code: number;
+    wind_speed_10m: number;
+    precipitation: number;
+  };
+  daily: {
+    time: string[];
+    weather_code: number[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+    precipitation_probability_max: number[];
+    relative_humidity_2m_max: number[];
+    wind_speed_10m_max: number[];
+  };
+}
+
+/**
+ * Map Open-Meteo WMO weather codes to our app condition strings
+ */
+function getOpenMeteoCondition(code: number): string {
+  if (code === 0) return "Sunny";
+  if (code === 1) return "Partly Cloudy";
+  if (code === 2) return "Partly Cloudy";
+  if (code === 3) return "Cloudy";
+  if (code >= 45 && code <= 48) return "Foggy";
+  if (code >= 51 && code <= 67) return "Rainy";
+  if (code >= 71 && code <= 77) return "Snowy";
+  if (code >= 80 && code <= 82) return "Rainy";
+  if (code >= 85 && code <= 86) return "Snowy";
+  if (code >= 95 && code <= 99) return "Stormy";
+  return "Cloudy";
+}
+
+/**
+ * Fetch weather from Open-Meteo (no API key required) and format
+ * it into our app's WeatherData shape.
+ */
+async function fetchOpenMeteo(lat: string, lon: string) {
+  const url =
+    "https://api.open-meteo.com/v1/forecast" +
+    `?latitude=${lat}&longitude=${lon}` +
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation" +
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,relative_humidity_2m_max,wind_speed_10m_max" +
+    "&timezone=auto&forecast_days=7";
+
+  const response = await fetch(url, { next: { revalidate: 600 } });
+  if (!response.ok) {
+    throw new Error(`Open-Meteo API error (${response.status})`);
+  }
+
+  const data: OpenMeteoResponse = await response.json();
+
+  const condition = getOpenMeteoCondition(data.current.weather_code);
+  const currentForecast = {
+    condition,
+    temp: Math.round(data.current.temperature_2m),
+    humidity: data.current.relative_humidity_2m,
+    rain: Math.round(data.current.precipitation),
+    wind: Math.round(data.current.wind_speed_10m),
+  };
+
+  const displayCurrent = {
+    temperature: Math.round(data.current.temperature_2m),
+    humidity: data.current.relative_humidity_2m,
+    rain: Math.round(data.current.precipitation),
+    wind: Math.round(data.current.wind_speed_10m),
+    condition,
+    icon: "01d",
+    feelsLike: Math.round(data.current.apparent_temperature),
+    uvIndex: 0,
+  };
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const forecast = (data.daily.time || []).slice(0, 7).map((date, i) => {
+    const dayCondition = getOpenMeteoCondition(data.daily.weather_code?.[i] ?? 3);
+    return {
+      day: dayNames[new Date(date).getDay()],
+      date,
+      temp: Math.round((data.daily.temperature_2m_max?.[i] ?? data.current.temperature_2m)),
+      tempMin: Math.round(data.daily.temperature_2m_min?.[i] ?? data.current.temperature_2m),
+      tempMax: Math.round(data.daily.temperature_2m_max?.[i] ?? data.current.temperature_2m),
+      humidity: data.daily.relative_humidity_2m_max?.[i] ?? data.current.relative_humidity_2m,
+      rain: Math.round(data.daily.precipitation_probability_max?.[i] ?? 0),
+      wind: Math.round(data.daily.wind_speed_10m_max?.[i] ?? data.current.wind_speed_10m),
+      condition: dayCondition,
+      icon: "01d",
+      description: dayCondition,
+    };
+  });
+
+  const advisory = getCropAdvisory(currentForecast);
+
+  return {
+    current: displayCurrent,
+    forecast,
+    advisory,
+    location: {
+      lat: parseFloat(lat),
+      lon: parseFloat(lon),
+      timezone: data.timezone,
+    },
   };
 }

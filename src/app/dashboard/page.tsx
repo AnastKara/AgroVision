@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   AreaChart,
   Area,
@@ -15,9 +14,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import {
   Map,
@@ -32,7 +28,6 @@ import {
   Cloud,
   CloudRain,
   Wind,
-  RefreshCw,
 } from "lucide-react";
 import { tasks, transactions, notifications, weatherData as mockWeatherData, analyticsData } from "@/lib/data";
 import type { Field } from "@/lib/data";
@@ -60,13 +55,6 @@ const weatherIcons: Record<string, any> = {
   Rainy: CloudRain,
   Stormy: CloudRain,
   Cloudy: Cloud,
-};
-
-const taskStatusColors = {
-  todo: "bg-muted text-muted-foreground",
-  in_progress: "bg-blue-500/10 text-blue-500",
-  review: "bg-yellow-500/10 text-yellow-500",
-  done: "bg-green-500/10 text-green-500",
 };
 
 const taskTypeIcons: Record<string, any> = {

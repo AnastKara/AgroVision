@@ -11,11 +11,14 @@ import { createClient } from "./client";
 import type { User, AuthError } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
+type Provider = "google" | "github";
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
+  signInWithProvider: (provider: Provider) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   isConfigured: boolean;
 }
@@ -25,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
+  signInWithProvider: async () => ({ error: null }),
   signOut: async () => {},
   isConfigured: false,
 });
@@ -101,6 +105,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const signInWithProvider = useCallback(async (provider: Provider) => {
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    if (!supabase?.auth) {
+      window.location.href = "/dashboard";
+      return { error: null };
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    });
+    return { error };
+  }, []);
+
   const signOut = useCallback(async () => {
     if (supabase?.auth) {
       await supabase.auth.signOut();
@@ -110,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, isConfigured }}>
+<AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithProvider, signOut, isConfigured }}>
       {children}
     </AuthContext.Provider>
   );

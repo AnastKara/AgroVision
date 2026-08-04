@@ -1,16 +1,10 @@
-# TODO: Open-Meteo Weather Provider Integration
+# Code Quality Improvements
 
-## Plan
-- [x] Explore existing weather integration (AgroMonitoring → OpenWeatherMap fallback)
-- [x] Create plan & get user approval
-
-## Implementation Steps
-- [ ] 1. Add Open-Meteo as final fallback in `src/app/api/weather/route.ts`
-- [ ] 2. Add `getOpenMeteoCondition(code)` to map WMO weather codes → app condition strings
-- [ ] 3. Reuse `getAMCropAdvisory()` for crop advisory
-- [ ] 4. Return same `WeatherData` shape so client works unchanged
-
-## Verification
-- [ ] TypeScript: no new errors
-- [ ] Lint: no new errors
-- [ ] Weather works with zero API keys configured (Open-Meteo fallback)
+## Fixes
+- [x] 1. README merge conflict markers — resolved
+- [x] 2. Unused imports in dashboard — removed (RefreshCw, PieChart, Pie, Cell, Progress)
+- [x] 3. Remove unused `taskStatusColors` constant in dashboard
+- [x] 4. Add Open-Meteo keyless fallback to `/api/weather`
+- [x] 5. Wire up social login buttons (Google/GitHub) — added `signInWithProvider` to auth provider and wired buttons in login page
+- [x] 6. Verify PWA manifest — `manifest.ts` correctly generates `/manifest.webmanifest`, referenced in layout and SW precache
+- [x] 7. Remove duplicate translation keys (`landing.heroTitle`/`landing.heroSubtitle`)
