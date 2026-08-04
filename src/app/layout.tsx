@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/supabase/auth-provider";
 import { PwaProvider } from "@/components/pwa-provider";
 import { UnitsProvider } from "@/components/units-provider";
 import { CurrencyProvider } from "@/components/currency-provider";
+import { LanguageProvider } from "@/components/language-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,11 +51,13 @@ export default function RootLayout({
         <ThemeProvider>
           <UnitsProvider>
             <CurrencyProvider>
-              <AuthProvider>
-                <PwaProvider>
-                  {children}
-                </PwaProvider>
-              </AuthProvider>
+              <LanguageProvider>
+                <AuthProvider>
+                  <PwaProvider>
+                    {children}
+                  </PwaProvider>
+                </AuthProvider>
+              </LanguageProvider>
             </CurrencyProvider>
           </UnitsProvider>
         </ThemeProvider>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/supabase/auth-provider";
+import { useLanguage } from "@/components/language-provider";
 import {
   LayoutDashboard,
   Map,
@@ -31,25 +32,25 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Map, label: "Farm Map", href: "/dashboard/farm-map" },
-  { icon: Cloud, label: "Weather", href: "/dashboard/weather" },
-  { icon: Radio, label: "Sensors", href: "/dashboard/sensors" },
-  { icon: Sprout, label: "Fields", href: "/dashboard/fields" },
-  { icon: Calendar, label: "Calendar", href: "/dashboard/calendar" },
-  { icon: Package, label: "Inventory", href: "/dashboard/inventory" },
-  { icon: PawPrint, label: "Animals", href: "/dashboard/animals" },
-  { icon: Tractor, label: "Machinery", href: "/dashboard/machinery" },
-  { icon: Users, label: "Workers", href: "/dashboard/workers" },
-  { icon: ShoppingBag, label: "Marketplace", href: "/dashboard/marketplace" },
-  { icon: BarChart3, label: "Analytics", href: "/dashboard/analytics" },
-  { icon: DollarSign, label: "Finance", href: "/dashboard/finance" },
-  { icon: Bot, label: "AI Assistant", href: "/dashboard/ai" },
+  { icon: LayoutDashboard, labelKey: "nav.dashboard", href: "/dashboard" },
+  { icon: Map, labelKey: "nav.farmMap", href: "/dashboard/farm-map" },
+  { icon: Cloud, labelKey: "nav.weather", href: "/dashboard/weather" },
+  { icon: Radio, labelKey: "nav.sensors", href: "/dashboard/sensors" },
+  { icon: Sprout, labelKey: "nav.fields", href: "/dashboard/fields" },
+  { icon: Calendar, labelKey: "nav.calendar", href: "/dashboard/calendar" },
+  { icon: Package, labelKey: "nav.inventory", href: "/dashboard/inventory" },
+  { icon: PawPrint, labelKey: "nav.animals", href: "/dashboard/animals" },
+  { icon: Tractor, labelKey: "nav.machinery", href: "/dashboard/machinery" },
+  { icon: Users, labelKey: "nav.workers", href: "/dashboard/workers" },
+  { icon: ShoppingBag, labelKey: "nav.marketplace", href: "/dashboard/marketplace" },
+  { icon: BarChart3, labelKey: "nav.analytics", href: "/dashboard/analytics" },
+  { icon: DollarSign, labelKey: "nav.finance", href: "/dashboard/finance" },
+  { icon: Bot, labelKey: "nav.aiAssistant", href: "/dashboard/ai" },
 ];
 
 const bottomItems = [
-  { icon: Bell, label: "Notifications", href: "/dashboard/notifications" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+  { icon: Bell, labelKey: "nav.notifications", href: "/dashboard/notifications" },
+  { icon: Settings, labelKey: "nav.settings", href: "/dashboard/settings" },
 ];
 
 export default function Sidebar() {
@@ -57,6 +58,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { signOut, isConfigured } = useAuth();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await signOut();
@@ -140,7 +142,7 @@ export default function Sidebar() {
                     animate={{ opacity: 1 }}
                     className="text-sm font-medium"
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </motion.span>
                 )}
                 {isActive && !collapsed && (
@@ -171,7 +173,7 @@ export default function Sidebar() {
                 )}
               >
                 <item.icon size={20} />
-                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                {!collapsed && <span className="text-sm font-medium">{t(item.labelKey)}</span>}
               </Link>
             );
           })}
@@ -182,7 +184,7 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
           >
             <LogOut size={20} />
-            {!collapsed && <span className="text-sm font-medium">Logout</span>}
+            {!collapsed && <span className="text-sm font-medium">{t("nav.logout")}</span>}
           </button>
 
           {/* Collapse Toggle - Desktop only */}

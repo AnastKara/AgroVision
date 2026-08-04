@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/theme-provider";
+import { useLanguage } from "@/components/language-provider";
 import {
   ArrowRight,
   ChevronDown,
@@ -23,7 +24,6 @@ import {
   Play,
   Tractor,
   Droplets,
-  Thermometer,
   Cloud,
   TrendingUp,
 } from "lucide-react";
@@ -41,107 +41,109 @@ const staggerContainer = {
   },
 };
 
-const features = [
-  {
-    icon: Map,
-    title: "Interactive Farm Map",
-    description: "Visualize your entire farm with satellite imagery. Draw field boundaries, monitor crop health, and track resources in real-time.",
-    color: "from-emerald-400 to-green-500",
-  },
-  {
-    icon: Bot,
-    title: "AI Assistant",
-    description: "Get intelligent recommendations on irrigation, pest control, and yield optimization powered by machine learning.",
-    color: "from-blue-400 to-indigo-500",
-  },
-  {
-    icon: BarChart3,
-    title: "Advanced Analytics",
-    description: "Track income, expenses, crop health, and yield predictions with beautiful interactive charts and reports.",
-    color: "from-purple-400 to-pink-500",
-  },
-  {
-    icon: Tractor,
-    title: "Fleet Management",
-    description: "Monitor all your machinery in one place. Track hours, fuel, maintenance schedules, and worker assignments.",
-    color: "from-orange-400 to-red-500",
-  },
-  {
-    icon: Droplets,
-    title: "Weather Intelligence",
-    description: "Hyper-local weather forecasts with irrigation and spraying recommendations tailored to your fields.",
-    color: "from-cyan-400 to-blue-500",
-  },
-  {
-    icon: Shield,
-    title: "Complete Control",
-    description: "Manage workers, tasks, animals, inventory, and finances with a comprehensive, all-in-one dashboard.",
-    color: "from-green-400 to-emerald-500",
-  },
-];
-
-const testimonials = [
-  {
-    name: "Sarah Mitchell",
-    role: "Third-Generation Farmer",
-    content: "AgroVision transformed how we manage our 500-acre farm. The AI recommendations alone saved us 30% on water costs.",
-    rating: 5,
-    location: "Iowa",
-  },
-  {
-    name: "James Anderson",
-    role: "AgriTech Consultant",
-    content: "The most intuitive farm management platform I've ever used. The interactive map feature is a game-changer.",
-    rating: 5,
-    location: "California",
-  },
-  {
-    name: "Maria Rodriguez",
-    role: "Organic Farm Owner",
-    content: "From crop health monitoring to worker management, AgroVision does it all. It's like having a digital farm manager.",
-    rating: 5,
-    location: "Texas",
-  },
-];
-
-const pricingPlans = [
-  {
-    name: "Starter",
-    price: "29",
-    description: "Perfect for small family farms",
-    features: ["Up to 50 acres", "Basic analytics", "Weather forecasts", "Task management", "Email support"],
-    popular: false,
-  },
-  {
-    name: "Professional",
-    price: "79",
-    description: "Ideal for growing operations",
-    features: ["Up to 500 acres", "Advanced analytics", "AI Assistant", "Farm map & fields", "Equipment tracking", "Priority support", "API access"],
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "199",
-    description: "For large-scale farming operations",
-    features: ["Unlimited acres", "Full analytics suite", "Premium AI features", "Unlimited users", "Custom integrations", "Dedicated support", "SLA guarantee", "On-premise option"],
-    popular: false,
-  },
-];
-
-const faqs = [
-  { q: "How does the interactive farm map work?", a: "AgroVision uses satellite imagery to create a digital twin of your farm. You can draw field boundaries, monitor crop health through NDVI analysis, and track field activities in real-time." },
-  { q: "Can I integrate with my existing equipment?", a: "Yes! AgroVision supports integration with most modern farm equipment through API connections and IoT sensors. We support John Deere, Case IH, and many more." },
-  { q: "How accurate is the AI assistant?", a: "Our AI models are trained on millions of agricultural data points and achieve over 90% accuracy in recommendations. We continuously update models based on the latest research." },
-  { q: "Is my farm data secure?", a: "Absolutely. We use enterprise-grade encryption for all data. Your farm data is encrypted at rest and in transit. We never share your data with third parties." },
-  { q: "What if I need help getting started?", a: "Every plan includes onboarding support. Our team of agricultural technology experts will help you set up your digital farm and train your team." },
-  { q: "Can I try before buying?", a: "Yes! We offer a 14-day free trial with full access to all features. No credit card required." },
-];
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [email, setEmail] = useState("");
+
+  const features = [
+    {
+      icon: Map,
+      title: t("landing.feature.mapTitle"),
+      description: t("landing.feature.mapDescription"),
+      color: "from-emerald-400 to-green-500",
+    },
+    {
+      icon: Bot,
+      title: t("landing.feature.aiTitle"),
+      description: t("landing.feature.aiDescription"),
+      color: "from-blue-400 to-indigo-500",
+    },
+    {
+      icon: BarChart3,
+      title: t("landing.feature.analyticsTitle"),
+      description: t("landing.feature.analyticsDescription"),
+      color: "from-purple-400 to-pink-500",
+    },
+    {
+      icon: Tractor,
+      title: t("landing.feature.fleetTitle"),
+      description: t("landing.feature.fleetDescription"),
+      color: "from-orange-400 to-red-500",
+    },
+    {
+      icon: Droplets,
+      title: t("landing.feature.weatherTitle"),
+      description: t("landing.feature.weatherDescription"),
+      color: "from-cyan-400 to-blue-500",
+    },
+    {
+      icon: Shield,
+      title: t("landing.feature.controlTitle"),
+      description: t("landing.feature.controlDescription"),
+      color: "from-green-400 to-emerald-500",
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: t("landing.testimonialSarahName"),
+      role: t("landing.testimonialSarahRole"),
+      content: t("landing.testimonialSarahContent"),
+      rating: 5,
+      location: t("landing.testimonialSarahLocation"),
+    },
+    {
+      name: t("landing.testimonialJamesName"),
+      role: t("landing.testimonialJamesRole"),
+      content: t("landing.testimonialJamesContent"),
+      rating: 5,
+      location: t("landing.testimonialJamesLocation"),
+    },
+    {
+      name: t("landing.testimonialMariaName"),
+      role: t("landing.testimonialMariaRole"),
+      content: t("landing.testimonialMariaContent"),
+      rating: 5,
+      location: t("landing.testimonialMariaLocation"),
+    },
+  ];
+
+  const pricingPlans = [
+    {
+      name: t("landing.pricingStarterName"),
+      price: "29",
+      description: t("landing.pricingStarterDescription"),
+      features: ["Up to 50 acres", "Basic analytics", "Weather forecasts", "Task management", "Email support"],
+      popular: false,
+    },
+    {
+      name: t("landing.pricingProfessionalName"),
+      price: "79",
+      description: t("landing.pricingProfessionalDescription"),
+      features: ["Up to 500 acres", "Advanced analytics", "AI Assistant", "Farm map & fields", "Equipment tracking", "Priority support", "API access"],
+      popular: true,
+    },
+    {
+      name: t("landing.pricingEnterpriseName"),
+      price: "199",
+      description: t("landing.pricingEnterpriseDescription"),
+      features: ["Unlimited acres", "Full analytics suite", "Premium AI features", "Unlimited users", "Custom integrations", "Dedicated support", "SLA guarantee", "On-premise option"],
+      popular: false,
+    },
+  ];
+
+  const faqs = [
+    { q: t("landing.faqMapQuestion"), a: t("landing.faqMapAnswer") },
+    { q: t("landing.faqEquipmentQuestion"), a: t("landing.faqEquipmentAnswer") },
+    { q: t("landing.faqAccuracyQuestion"), a: t("landing.faqAccuracyAnswer") },
+    { q: t("landing.faqSecurityQuestion"), a: t("landing.faqSecurityAnswer") },
+    { q: t("landing.faqSupportQuestion"), a: t("landing.faqSupportAnswer") },
+    { q: t("landing.faqTrialQuestion"), a: t("landing.faqTrialAnswer") },
+  ];
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -168,13 +170,13 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-8">
-            {["Features", "Dashboard", "Pricing", "FAQ"].map((item) => (
+            {[{ key: "landing.navFeatures", href: "#features" }, { key: "landing.navDashboard", href: "#dashboard" }, { key: "landing.navPricing", href: "#pricing" }, { key: "landing.navFaq", href: "#faq" }].map((item) => (
               <Link
-                key={item}
-                href={`#${item.toLowerCase()}`}
+                key={item.key}
+                href={item.href}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {item}
+                {t(item.key)}
               </Link>
             ))}
           </div>
@@ -188,12 +190,12 @@ export default function LandingPage() {
             </button>
             <Link href="/login">
               <Button variant="ghost" size="sm" className="hidden sm:flex">
-                Sign In
+                {t("landing.signIn")}
               </Button>
             </Link>
             <Link href="/register">
               <Button size="sm" className="hidden sm:flex">
-                Get Started
+                {t("landing.getStarted")}
               </Button>
             </Link>
             <button
@@ -215,24 +217,24 @@ export default function LandingPage() {
               className="md:hidden border-t border-border overflow-hidden"
             >
               <div className="px-4 py-4 space-y-2">
-                {["Features", "Dashboard", "Pricing", "FAQ"].map((item) => (
+                {[{ key: "landing.navFeatures", href: "#features" }, { key: "landing.navDashboard", href: "#dashboard" }, { key: "landing.navPricing", href: "#pricing" }, { key: "landing.navFaq", href: "#faq" }].map((item) => (
                   <Link
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
+                    key={item.key}
+                    href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className="block px-3 py-2 rounded-xl hover:bg-muted transition-colors text-sm"
                   >
-                    {item}
+                    {t(item.key)}
                   </Link>
                 ))}
                 <div className="flex gap-2 pt-2">
                   <Link href="/login" className="flex-1">
                     <Button variant="outline" className="w-full">
-                      Sign In
+                      {t("landing.signIn")}
                     </Button>
                   </Link>
                   <Link href="/register" className="flex-1">
-                    <Button className="w-full">Get Started</Button>
+                    <Button className="w-full">{t("landing.getStarted")}</Button>
                   </Link>
                 </div>
               </div>
@@ -296,7 +298,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-8"
             >
               <Sprout size={14} />
-              The Future of Farm Management
+              {t("landing.heroBadge")}
             </motion.div>
 
             <motion.h1
@@ -305,9 +307,7 @@ export default function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight mb-6"
             >
-              The Digital Twin
-              <br />
-              <span className="gradient-text">of Your Farm</span>
+              {t("landing.heroTitle")}
             </motion.h1>
 
             <motion.p
@@ -316,8 +316,7 @@ export default function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed"
             >
-              Manage your fields, animals, machinery, workers, and finances
-              from one intelligent platform powered by AI and real-time data.
+              {t("landing.heroSubtitle")}
             </motion.p>
 
             <motion.div
@@ -328,13 +327,13 @@ export default function LandingPage() {
             >
               <Link href="/register">
                 <Button size="xl" className="w-full sm:w-auto">
-                  Get Started Free
+                  {t("landing.heroPrimary")}
                   <ArrowRight size={18} className="ml-2" />
                 </Button>
               </Link>
               <Button variant="glass" size="xl" className="w-full sm:w-auto">
                 <Play size={18} className="mr-2" />
-                Watch Demo
+                {t("landing.heroSecondary")}
               </Button>
             </motion.div>
 
@@ -346,15 +345,15 @@ export default function LandingPage() {
             >
               <div className="flex items-center gap-2">
                 <Check size={16} className="text-primary" />
-                No credit card required
+                {t("landing.heroNoCard")}
               </div>
               <div className="flex items-center gap-2">
                 <Check size={16} className="text-primary" />
-                14-day free trial
+                {t("landing.heroTrial")}
               </div>
               <div className="flex items-center gap-2">
                 <Check size={16} className="text-primary" />
-                Cancel anytime
+                {t("landing.heroCancel")}
               </div>
             </motion.div>
           </div>
@@ -382,15 +381,13 @@ export default function LandingPage() {
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-4">
               <Sprout size={14} />
-              Features
+              {t("landing.featuresBadge")}
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
-              Everything you need to
-              <br />
-              <span className="gradient-text">manage your farm</span>
+              {t("landing.featuresTitle")}
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              From satellite monitoring to AI-powered recommendations, AgroVision gives you complete control.
+              {t("landing.featuresSubtitle")}
             </motion.p>
           </motion.div>
 
@@ -430,12 +427,10 @@ export default function LandingPage() {
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-4">
               <BarChart3 size={14} />
-              Dashboard Preview
+              {t("landing.previewBadge")}
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
-              Beautiful, intuitive, and
-              <br />
-              <span className="gradient-text">powerful dashboard</span>
+              {t("landing.previewTitle")}
             </motion.h2>
           </motion.div>
 
@@ -459,10 +454,10 @@ export default function LandingPage() {
                 <div className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     {[
-                      { label: "Total Fields", value: "5", change: "+2", color: "from-emerald-400 to-green-500" },
-                      { label: "Total Area", value: "195 ha", change: "Active", color: "from-blue-400 to-indigo-500" },
-                      { label: "Farm Health", value: "76%", change: "+8%", color: "from-green-400 to-emerald-500" },
-                      { label: "Est. Revenue", value: "$124K", change: "+15%", color: "from-purple-400 to-pink-500" },
+                      { label: t("landing.previewStatFields"), value: "5", change: "+2", color: "from-emerald-400 to-green-500" },
+                      { label: t("landing.previewStatArea"), value: "195 ha", change: "Active", color: "from-blue-400 to-indigo-500" },
+                      { label: t("landing.previewStatHealth"), value: "76%", change: "+8%", color: "from-green-400 to-emerald-500" },
+                      { label: t("landing.previewStatRevenue"), value: "$124K", change: "+15%", color: "from-purple-400 to-pink-500" },
                     ].map((stat, i) => (
                       <div key={i} className="glass rounded-2xl p-4">
                         <p className="text-xs text-muted-foreground mb-1">{stat.label}</p>
@@ -476,7 +471,7 @@ export default function LandingPage() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="glass rounded-2xl p-4">
-                      <p className="text-sm font-medium mb-3">Crop Health Overview</p>
+                      <p className="text-sm font-medium mb-3">{t("landing.previewCropHealth")}</p>
                       <div className="space-y-3">
                         {["Wheat", "Corn", "Soybeans", "Apples"].map((crop, i) => (
                           <div key={i} className="flex items-center gap-3">
@@ -490,14 +485,14 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div className="glass rounded-2xl p-4">
-                      <p className="text-sm font-medium mb-3">Weather</p>
+                      <p className="text-sm font-medium mb-3">{t("landing.previewWeather")}</p>
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 flex items-center justify-center">
                           <Cloud size={28} className="text-yellow-500" />
                         </div>
                         <div>
                           <p className="text-3xl font-bold">22°C</p>
-                          <p className="text-sm text-muted-foreground">Partly Cloudy</p>
+                          <p className="text-sm text-muted-foreground">{t("landing.previewWeatherCloudy")}</p>
                         </div>
                         <div className="flex-1 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
                           <div>💧 65%</div>
@@ -526,12 +521,10 @@ export default function LandingPage() {
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-4">
               <Star size={14} />
-              Testimonials
+              {t("landing.testimonialsBadge")}
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
-              Trusted by farmers
-              <br />
-              <span className="gradient-text">worldwide</span>
+              {t("landing.testimonialsTitle")}
             </motion.h2>
           </motion.div>
 
@@ -577,12 +570,10 @@ export default function LandingPage() {
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-4">
               <TrendingUp size={14} />
-              Pricing
+              {t("landing.pricingBadge")}
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
-              Simple, transparent
-              <br />
-              <span className="gradient-text">pricing</span>
+              {t("landing.pricingTitle")}
             </motion.h2>
           </motion.div>
 
@@ -601,7 +592,7 @@ export default function LandingPage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-white text-xs font-medium">
-                    Most Popular
+                    {t("landing.pricingMostPopular")}
                   </div>
                 )}
                 <div className="text-center mb-6">
@@ -621,7 +612,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Button variant={plan.popular ? "default" : "outline"} className="w-full">
-                  {plan.popular ? "Start Free Trial" : "Get Started"}
+                  {plan.popular ? t("landing.pricingStartFreeTrial") : t("landing.pricingGetStarted")}
                 </Button>
               </motion.div>
             ))}
@@ -640,12 +631,10 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-4">
-              FAQ
+              {t("landing.faqBadge")}
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
-              Frequently asked
-              <br />
-              <span className="gradient-text">questions</span>
+              {t("landing.faqTitle")}
             </motion.h2>
           </motion.div>
 
@@ -700,23 +689,21 @@ export default function LandingPage() {
             variants={staggerContainer}
           >
             <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
-              Ready to transform
-              <br />
-              <span className="gradient-text">your farm?</span>
+              {t("landing.ctaTitle")}
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-              Join thousands of farmers already using AgroVision. Start your free 14-day trial today.
+              {t("landing.ctaSubtitle")}
             </motion.p>
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
               <Input
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("landing.ctaPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="flex-1"
               />
               <Button size="lg" className="w-full sm:w-auto">
-                Get Started
+                {t("landing.ctaButton")}
                 <ArrowRight size={18} className="ml-2" />
               </Button>
             </motion.div>
@@ -736,13 +723,13 @@ export default function LandingPage() {
                 <span className="font-bold text-lg">AgroVision</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                The intelligent platform for modern farm management.
+                {t("landing.footerDescription")}
               </p>
             </div>
             {[
-              { title: "Product", items: ["Features", "Pricing", "Dashboard", "Integrations"] },
-              { title: "Company", items: ["About", "Blog", "Careers", "Contact"] },
-              { title: "Legal", items: ["Privacy", "Terms", "Security", "Cookies"] },
+              { title: t("landing.footerProduct"), items: [t("landing.footerFeatures"), t("landing.footerPricing"), t("landing.footerDashboard"), t("landing.footerIntegrations")] },
+              { title: t("landing.footerCompany"), items: [t("landing.footerAbout"), t("landing.footerBlog"), t("landing.footerCareers"), t("landing.footerContact")] },
+              { title: t("landing.footerLegal"), items: [t("landing.footerPrivacy"), t("landing.footerTerms"), t("landing.footerSecurity"), t("landing.footerCookies")] },
             ].map((col, i) => (
               <div key={i}>
                 <h4 className="font-semibold text-sm mb-4">{col.title}</h4>
@@ -759,7 +746,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-            © 2024 AgroVision. All rights reserved.
+            {t("landing.footerRights")}
           </div>
         </div>
       </footer>

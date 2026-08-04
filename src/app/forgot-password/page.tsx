@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Sprout, ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/supabase/auth-provider";
+import { useLanguage } from "@/components/language-provider";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { isConfigured } = useAuth();
+  const { t } = useLanguage();
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +52,7 @@ export default function ForgotPasswordPage() {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <ArrowLeft size={16} />
-            Back to login
+            {t("auth.backLogin")}
           </Link>
 
           <div className="flex items-center gap-2 mb-8">
@@ -62,14 +64,14 @@ export default function ForgotPasswordPage() {
 
           {!sent ? (
             <>
-              <h1 className="text-3xl font-bold mb-2">Forgot password?</h1>
+              <h1 className="text-3xl font-bold mb-2">{t("auth.forgotPasswordTitle")}</h1>
               <p className="text-muted-foreground mb-8">
-                Enter your email and we&apos;ll send you a reset link.
+                {t("auth.forgotPasswordSubtitle")}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Email</label>
+                  <label className="block text-sm font-medium mb-1.5">{t("auth.email")}</label>
                   <Input
                     type="email"
                     placeholder="you@farm.com"
@@ -80,7 +82,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <Button type="submit" className="w-full" size="lg">
-                  Send Reset Link
+                  {t("auth.sendResetLink")}
                   <Mail size={16} className="ml-2" />
                 </Button>
               </form>
@@ -94,16 +96,16 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-6">
                 <CheckCircle size={32} className="text-green-500" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Check your email</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("auth.checkEmail")}</h2>
               <p className="text-muted-foreground mb-6">
-                We've sent a password reset link to{" "}
+                {t("auth.checkEmailSubtitle")} {" "}
                 <span className="font-medium text-foreground">{email}</span>
               </p>
               <Button
                 variant="outline"
                 onClick={() => setSent(false)}
               >
-                Send again
+                {t("auth.sendAgain")}
               </Button>
             </motion.div>
           )}
@@ -120,9 +122,9 @@ export default function ForgotPasswordPage() {
           <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30">
             <Mail size={60} className="text-white" />
           </div>
-          <h2 className="text-3xl font-bold mb-4">No worries</h2>
+          <h2 className="text-3xl font-bold mb-4">{t("auth.resetTitle")}</h2>
           <p className="text-muted-foreground leading-relaxed">
-            We'll help you recover access to your account quickly and securely.
+            {t("auth.resetSubtitle")}
           </p>
         </motion.div>
       </div>

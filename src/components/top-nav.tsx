@@ -19,9 +19,11 @@ import {
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { useLanguage } from "./language-provider";
 
 export default function TopNav() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [fullscreen, setFullscreen] = useState(false);
   const { isOnline, isInstallable, isInstalled, installPrompt } = usePwa();
 
@@ -46,7 +48,7 @@ export default function TopNav() {
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search fields, tasks, machinery..."
+            placeholder={t("nav.searchPlaceholder")}
             className="pl-9 h-9 bg-muted/50 border-none rounded-xl text-sm"
           />
         </div>
@@ -64,7 +66,7 @@ export default function TopNav() {
           title={isOnline ? "Online" : "Offline — showing cached data"}
         >
           {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
-          <span>{isOnline ? "Online" : "Offline"}</span>
+          <span>{isOnline ? t("nav.online") : t("nav.offline")}</span>
         </div>
 
         {/* Install App Button */}
@@ -76,7 +78,7 @@ export default function TopNav() {
             className="hidden md:flex items-center gap-1.5 rounded-xl"
           >
             <Download size={14} />
-            Install
+            {t("nav.install")}
           </Button>
         )}
 
@@ -130,8 +132,8 @@ export default function TopNav() {
             className="ring-2 ring-primary/20"
           />
           <div className="hidden lg:block">
-            <p className="text-sm font-medium leading-none">Alex Driver</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Farm Manager</p>
+            <p className="text-sm font-medium leading-none">{t("nav.profileTitle")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("nav.profileSubtitle")}</p>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sprout, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/lib/supabase/auth-provider";
+import { useLanguage } from "@/components/language-provider";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +17,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { signUp, isConfigured } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +52,9 @@ export default function RegisterPage() {
           <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30">
             <Sprout size={60} className="text-white" />
           </div>
-          <h2 className="text-3xl font-bold mb-4">Start Your Journey</h2>
+          <h2 className="text-3xl font-bold mb-4">{t("auth.registerTitle")}</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Join thousands of modern farmers using AgroVision to manage their
-            operations more efficiently.
+            {t("auth.registerSubtitle")}
           </p>
         </motion.div>
       </div>
@@ -70,7 +71,7 @@ export default function RegisterPage() {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <ArrowLeft size={16} />
-            Back to home
+            {t("auth.backHome")}
           </Link>
 
           <div className="flex items-center gap-2 mb-8">
@@ -80,14 +81,14 @@ export default function RegisterPage() {
             <span className="font-bold text-xl gradient-text">AgroVision</span>
           </div>
 
-          <h1 className="text-3xl font-bold mb-2">Create your account</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("auth.createAccount")}</h1>
           <p className="text-muted-foreground mb-8">
-            Start your 14-day free trial. No credit card required.
+            {t("auth.createAccountSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">Full Name</label>
+              <label className="block text-sm font-medium mb-1.5">{t("auth.fullName")}</label>
               <Input
                 type="text"
                 placeholder="John Farmer"
@@ -98,7 +99,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Email</label>
+              <label className="block text-sm font-medium mb-1.5">{t("auth.email")}</label>
               <Input
                 type="email"
                 placeholder="you@farm.com"
@@ -109,7 +110,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1.5">Password</label>
+              <label className="block text-sm font-medium mb-1.5">{t("auth.password")}</label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -128,7 +129,7 @@ export default function RegisterPage() {
                 </button>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Must be at least 8 characters
+                {t("auth.passwordHint")}
               </p>
             </div>
 
@@ -139,15 +140,15 @@ export default function RegisterPage() {
             )}
 
             <Button type="submit" className="w-full" size="lg">
-              Create Account
+              {t("auth.createAccountButton")}
               <ArrowRight size={16} className="ml-2" />
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount")} {" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
-              Sign in
+              {t("auth.signIn")}
             </Link>
           </p>
 

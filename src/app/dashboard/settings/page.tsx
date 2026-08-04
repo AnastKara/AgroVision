@@ -15,6 +15,7 @@ import {
   getCurrencySymbol,
   useCurrency,
 } from "@/components/currency-provider";
+import { languageOptions, useLanguage } from "@/components/language-provider";
 import {
   Settings,
   Moon,
@@ -35,14 +36,15 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { unitSystem, setUnitSystem } = useUnits();
   const { currency, setCurrency } = useCurrency();
+  const { language, setLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState("general");
 
   const tabs = [
-    { id: "general", label: "General", icon: Settings },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "security", label: "Security", icon: Shield },
-    { id: "team", label: "Team", icon: Users },
+    { id: "general", label: t("tabs.general"), icon: Settings },
+    { id: "profile", label: t("tabs.profile"), icon: User },
+    { id: "notifications", label: t("tabs.notifications"), icon: Bell },
+    { id: "security", label: t("tabs.security"), icon: Shield },
+    { id: "team", label: t("tabs.team"), icon: Users },
   ];
   const unitOptions: { value: UnitSystem; label: string; icon: typeof Thermometer; desc: string }[] = [
     { value: "metric", label: "Metric", icon: Thermometer, desc: "Celsius, hectares, kg" },
@@ -52,8 +54,8 @@ export default function SettingsPage() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and application preferences</p>
+        <h1 className="text-3xl font-bold">{t("settings.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("settings.description")}</p>
       </div>
 
       <div className="flex gap-6">
@@ -86,12 +88,12 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette size={16} className="text-primary" />
-                  Appearance
+                  {t("appearance.title")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label className="text-sm font-medium mb-3 block">Theme</label>
+                  <label className="text-sm font-medium mb-3 block">{t("appearance.theme")}</label>
                   <div className="flex gap-3">
                     {[
                       { mode: "light", label: "Light", icon: Sun, desc: "Light mode for daytime" },
@@ -121,7 +123,7 @@ export default function SettingsPage() {
                 <Separator />
 
                 <div>
-                  <label htmlFor="currency" className="text-sm font-medium mb-3 block">Currency</label>
+                  <label htmlFor="currency" className="text-sm font-medium mb-3 block">{t("appearance.currency")}</label>
                   <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
                     <select
                       id="currency"
@@ -149,22 +151,28 @@ export default function SettingsPage() {
                 <Separator />
 
                 <div>
-                  <label className="text-sm font-medium mb-3 block">Language</label>
+                  <label className="text-sm font-medium mb-3 block">{t("appearance.language")}</label>
                   <div className="relative max-w-xs">
                     <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <select className="w-full h-11 rounded-xl border border-border bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-                      <option>English</option>
-                      <option>Spanish</option>
-                      <option>French</option>
-                      <option>German</option>
+                    <select
+                      value={language}
+                      onChange={(event) => setLanguage(event.target.value as typeof language)}
+                      className="w-full h-11 rounded-xl border border-border bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      {languageOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.nativeLabel} ({option.label})
+                        </option>
+                      ))}
                     </select>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-2">{t("appearance.languageHint")}</p>
                 </div>
 
                 <Separator />
 
                 <div>
-                  <label className="text-sm font-medium mb-3 block">Units</label>
+                  <label className="text-sm font-medium mb-3 block">{t("appearance.units")}</label>
                   <div className="flex gap-3" role="radiogroup" aria-label="Units">
                     {unitOptions.map((u) => (
                       <label

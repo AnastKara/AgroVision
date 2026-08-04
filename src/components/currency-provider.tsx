@@ -14,10 +14,63 @@ const CurrencyContext = createContext<CurrencyContextValue>({
   formatCurrency: (amount) => formatCurrencyValue(amount, "USD"),
 });
 
-export const currencyCodes =
-  typeof Intl.supportedValuesOf === "function"
-    ? Intl.supportedValuesOf("currency")
-    : ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
+export const currencyCodes = [
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "JPY",
+  "CHF",
+  "CNY",
+  "SEK",
+  "NOK",
+  "DKK",
+  "PLN",
+  "CZK",
+  "MXN",
+  "BRL",
+  "INR",
+  "ZAR",
+  "SGD",
+  "HKD",
+  "NZD",
+  "KRW",
+  "TRY",
+  "AED",
+  "SAR",
+  "THB",
+  "MYR",
+];
+
+const currencyNameMap: Record<string, string> = {
+  USD: "US Dollar",
+  EUR: "Euro",
+  GBP: "British Pound Sterling",
+  CAD: "Canadian Dollar",
+  AUD: "Australian Dollar",
+  JPY: "Japanese Yen",
+  CHF: "Swiss Franc",
+  CNY: "Chinese Yuan",
+  SEK: "Swedish Krona",
+  NOK: "Norwegian Krone",
+  DKK: "Danish Krone",
+  PLN: "Polish Zloty",
+  CZK: "Czech Koruna",
+  MXN: "Mexican Peso",
+  BRL: "Brazilian Real",
+  INR: "Indian Rupee",
+  ZAR: "South African Rand",
+  SGD: "Singapore Dollar",
+  HKD: "Hong Kong Dollar",
+  NZD: "New Zealand Dollar",
+  KRW: "South Korean Won",
+  TRY: "Turkish Lira",
+  AED: "UAE Dirham",
+  SAR: "Saudi Riyal",
+  THB: "Thai Baht",
+  MYR: "Malaysian Ringgit",
+};
 
 export function formatCurrencyValue(amount: number, currency: string) {
   return new Intl.NumberFormat("en-US", {
@@ -27,10 +80,8 @@ export function formatCurrencyValue(amount: number, currency: string) {
   }).format(amount);
 }
 
-const currencyNames = new Intl.DisplayNames(["en"], { type: "currency" });
-
 export function getCurrencyName(currency: string) {
-  return currencyNames.of(currency) ?? currency;
+  return currencyNameMap[currency] ?? currency;
 }
 
 export function getCurrencySymbol(currency: string) {
