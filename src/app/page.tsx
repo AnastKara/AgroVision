@@ -24,8 +24,13 @@ import {
   Play,
   Tractor,
   Droplets,
-  Cloud,
+Cloud,
   TrendingUp,
+  UserRound,
+  Rocket,
+  Lightbulb,
+  Target,
+  Heart,
 } from "lucide-react";
 
 const fadeInUp = {
@@ -169,8 +174,8 @@ export default function LandingPage() {
             <span className="font-bold text-xl gradient-text">AgroVision</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
-            {[{ key: "landing.navFeatures", href: "#features" }, { key: "landing.navDashboard", href: "#dashboard" }, { key: "landing.navPricing", href: "#pricing" }, { key: "landing.navFaq", href: "#faq" }].map((item) => (
+<div className="hidden md:flex items-center gap-8">
+            {[{ key: "landing.navFeatures", href: "#features" }, { key: "landing.navDashboard", href: "#dashboard" }, { key: "landing.navPricing", href: "#pricing" }, { key: "landing.navFaq", href: "#faq" }, { key: "landing.navAbout", href: "#about" }].map((item) => (
               <Link
                 key={item.key}
                 href={item.href}
@@ -217,7 +222,7 @@ export default function LandingPage() {
               className="md:hidden border-t border-border overflow-hidden"
             >
               <div className="px-4 py-4 space-y-2">
-                {[{ key: "landing.navFeatures", href: "#features" }, { key: "landing.navDashboard", href: "#dashboard" }, { key: "landing.navPricing", href: "#pricing" }, { key: "landing.navFaq", href: "#faq" }].map((item) => (
+{[{ key: "landing.navFeatures", href: "#features" }, { key: "landing.navDashboard", href: "#dashboard" }, { key: "landing.navPricing", href: "#pricing" }, { key: "landing.navFaq", href: "#faq" }, { key: "landing.navAbout", href: "#about" }].map((item) => (
                   <Link
                     key={item.key}
                     href={item.href}
@@ -558,7 +563,106 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* About Me / Founder Section */}
+      <section id="about" className="py-24 lg:py-32 relative overflow-hidden bg-background">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="text-center mb-16"
+          >
+            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary font-medium mb-4">
+              <UserRound size={14} />
+              About Me
+            </motion.div>
+            <motion.h2 variants={fadeInUp} className="text-4xl sm:text-5xl font-bold mb-4">
+              The Founder Behind AgroVision
+            </motion.h2>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="max-w-5xl mx-auto"
+          >
+            {/* Founder intro card */}
+            <motion.div variants={fadeInUp} className="glass-card glass-solid p-8 md:p-10 mb-6">
+              <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 mb-8">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <span className="text-4xl md:text-5xl font-bold text-white">AK</span>
+                </div>
+                <div className="text-center md:text-left">
+                  <h3 className="text-2xl font-bold mb-1">Anastasios Karaivazoglou</h3>
+                  <p className="text-primary font-medium mb-3">Founder &amp; Software Developer</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Hi, I&apos;m Anastasios Karaivazoglou, the founder of AgroVision. I am a young entrepreneur
+                    and software developer passionate about technology, artificial intelligence, and creating
+                    solutions that can solve real-world problems. My goal is to use innovation to make complex
+                    technologies simple, accessible, and useful for people who need them the most.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="glass glass-solid rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <Rocket size={16} />
+                    </div>
+                    <h4 className="font-semibold">The Vision</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    AgroVision started from my vision of transforming agriculture through technology. I believe
+                    that farmers should have access to powerful tools that help them understand their fields,
+                    make better decisions, reduce waste, and improve productivity.
+                  </p>
+                </div>
+                <div className="glass glass-solid rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center flex-shrink-0">
+                      <Target size={16} />
+                    </div>
+                    <h4 className="font-semibold">Combining Technologies</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    By combining artificial intelligence, satellite data, and smart sensor technology, AgroVision
+                    aims to create a new generation of precision agriculture tools that bring data-driven
+                    insights directly to farmers.
+                  </p>
+                </div>
+                <div className="glass glass-solid rounded-2xl p-5 md:col-span-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center flex-shrink-0">
+                      <Lightbulb size={16} />
+                    </div>
+                    <h4 className="font-semibold">The Dream</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    My dream is to build a technology company that creates a real impact in the agricultural
+                    industry and helps shape a more efficient, sustainable, and smarter future for farming.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Mission quote */}
+            <motion.div variants={fadeInUp} className="glass-card glass-solid p-8 text-center">
+              <Heart size={24} className="mx-auto mb-4 text-primary" />
+              <p className="text-lg md:text-xl font-medium leading-relaxed max-w-3xl mx-auto">
+                "Agrovision is more than just a project it is my mission to connect technology with
+                agriculture and create solutions that improve the way we grow food."
+              </p>
+              <p className="text-sm text-muted-foreground mt-4">Anastasios Karaivazoglou, Founder of AgroVision</p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+{/* Pricing Section */}
       <section id="pricing" className="py-24 lg:py-32 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div

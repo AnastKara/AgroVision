@@ -40,9 +40,8 @@ import {
 ExternalLink,
   Lock,
   Loader2,
-  ListChecks,
+ListChecks,
   Plug,
-  BarChart3,
   Sparkles,
   Wifi,
 } from "lucide-react";
@@ -252,6 +251,60 @@ await addIntegration({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Tutorial / Explanation */}
+      <Card className="overflow-hidden border-primary/20">
+        <CardContent className="p-0">
+          <div className="grid lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-border">
+            <div className="p-5 text-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mx-auto mb-3">
+                <Plug size={18} />
+              </div>
+              <h4 className="text-sm font-semibold mb-1">1. Select Provider</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Choose from supported sensor providers (METOS, Davis, CropX, Sencrop, John Deere, or bring your own API).
+              </p>
+            </div>
+            <div className="p-5 text-center">
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center mx-auto mb-3">
+                <ShieldCheck size={18} />
+              </div>
+              <h4 className="text-sm font-semibold mb-1">2. Connect &amp; Encrypt</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Connect via OAuth or provide an API key. Credentials are encrypted at rest (AES-256-GCM) — never stored in plaintext.
+              </p>
+            </div>
+            <div className="p-5 text-center">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center mx-auto mb-3">
+                <Wifi size={18} />
+              </div>
+              <h4 className="text-sm font-semibold mb-1">3. Sync Periodically</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Data is fetched automatically from the provider. Monitor sync logs, errors, and last-sync timestamps for each integration.
+              </p>
+            </div>
+            <div className="p-5 text-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-3">
+                <Sparkles size={18} />
+              </div>
+              <h4 className="text-sm font-semibold mb-1">4. AI-Driven Insights</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Sensor data is combined with weather, satellite (NDVI), and historical field data to generate AI recommendations for irrigation, nutrients, and pest control.
+              </p>
+            </div>
+          </div>
+          <Separator />
+          <div className="px-5 py-3 flex items-center gap-3 text-xs text-muted-foreground bg-muted/20">
+            <ListChecks size={14} className="text-primary flex-shrink-0" />
+            <span>
+              <strong className="text-foreground">How it works:</strong> Sensor data from all providers is normalized into a unified data model. The monitoring dashboard displays current readings, historical charts, and AI recommendations in one place.
+            </span>
+            <Link href="/dashboard/sensors/dashboard" className="text-primary hover:underline whitespace-nowrap font-medium">
+              Open Dashboard →
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Security banner */}
       <div className="glass rounded-xl p-4 flex items-start gap-3 border-primary/20 bg-primary/5">

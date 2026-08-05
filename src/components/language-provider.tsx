@@ -1274,7 +1274,7 @@ const translations: Record<string, Record<AppLanguage, string>> = {
     zh: "价格",
     ja: "料金",
   },
-  "landing.navFaq": {
+"landing.navFaq": {
     en: "FAQ",
     es: "Preguntas frecuentes",
     fr: "FAQ",
@@ -1286,6 +1286,19 @@ const translations: Record<string, Record<AppLanguage, string>> = {
     el: "Συχνές Ερωτήσεις",
     zh: "常见问题",
     ja: "FAQ",
+  },
+  "landing.navAbout": {
+    en: "About",
+    es: "Acerca de",
+    fr: "À propos",
+    de: "Über",
+    it: "Informazioni",
+    pt: "Sobre",
+    nl: "Over",
+    ar: "حول",
+    el: "Σχετικά",
+    zh: "关于",
+    ja: "会社概要",
   },
   "landing.feature.mapTitle": {
     en: "Interactive Farm Map",

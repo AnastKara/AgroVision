@@ -30,9 +30,24 @@ import {
   Save,
   User,
   Lock,
-  Radio,
+Radio,
   Plug,
   ArrowRight,
+  BookOpen,
+  LayoutDashboard,
+  Map,
+  Cloud,
+  Sprout,
+  Calendar,
+  Package,
+  PawPrint,
+  Tractor,
+  ShoppingBag,
+  BarChart3,
+  DollarSign,
+  Bot,
+  Activity,
+  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -49,7 +64,8 @@ const tabs = [
     { id: "notifications", label: t("tabs.notifications"), icon: Bell },
     { id: "security", label: t("tabs.security"), icon: Shield },
     { id: "team", label: t("tabs.team"), icon: Users },
-    { id: "sensors", label: "Sensors", icon: Radio },
+{ id: "sensors", label: "Sensors", icon: Radio },
+    { id: "tutorial", label: "Tutorial", icon: BookOpen },
   ];
   const unitOptions: { value: UnitSystem; label: string; icon: typeof Thermometer; desc: string }[] = [
     { value: "metric", label: "Metric", icon: Thermometer, desc: "Celsius, hectares, kg" },
@@ -366,6 +382,169 @@ const tabs = [
                 </div>
               </CardContent>
             </Card>
+          )}
+
+{/* Tutorial */}
+          {activeTab === "tutorial" && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen size={16} className="text-primary" />
+                    Welcome to AgroVision — How Everything Works
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    AgroVision is an all-in-one farm management platform. It combines real-time sensor data,
+                    satellite imagery, weather intelligence, and AI recommendations to help you run your farm
+                    more efficiently. This guide explains every section of the app.
+                  </p>
+                  <Link href="/dashboard/sensors/connect">
+                    <Button size="sm">
+                      <CheckCircle2 size={14} className="mr-1" />
+                      Get Started: Connect Your First Sensor
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Overview modules */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <LayoutDashboard size={16} className="text-primary" />
+                    Core Modules
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      { icon: LayoutDashboard, title: "Dashboard", color: "text-primary", desc: "High-level overview of your farm: field health, revenue, weather, pending tasks, and machinery status." },
+                      { icon: Map, title: "Farm Map", color: "text-green-500", desc: "Interactive satellite map. Draw field boundaries, monitor NDVI crop health, and view resource locations." },
+                      { icon: Cloud, title: "Weather", color: "text-blue-500", desc: "Hyper-local forecasts with irrigation and spraying recommendations based on current conditions." },
+                      { icon: Radio, title: "Sensors", color: "text-purple-500", desc: "Connect third-party sensors (METOS, Davis, CropX, etc.) and view real-time unified readings." },
+                      { icon: Sprout, title: "Fields", color: "text-emerald-500", desc: "Manage crops, growth stages, expected yield, and field health. Create fields from the map." },
+                      { icon: Calendar, title: "Calendar", color: "text-yellow-500", desc: "Schedule and track farm tasks, harvests, irrigations, and other important dates." },
+                      { icon: Package, title: "Inventory", color: "text-orange-500", desc: "Track seeds, fertilizers, supplies, and equipment stock levels in one place." },
+                      { icon: PawPrint, title: "Animals", color: "text-rose-500", desc: "Manage livestock health, vaccinations, breeding, and production history." },
+                      { icon: Tractor, title: "Machinery", color: "text-indigo-500", desc: "Monitor equipment hours, fuel, maintenance schedules, and worker assignments." },
+                      { icon: ShoppingBag, title: "Marketplace", color: "text-teal-500", desc: "Buy and sell seeds, equipment, animals, and services with other farmers." },
+                      { icon: BarChart3, title: "Analytics", color: "text-cyan-500", desc: "Track revenue, expenses, crop health trends, and yield predictions with charts." },
+                      { icon: DollarSign, title: "Finance", color: "text-pink-500", desc: "Manage income, expenses, payroll, and profitability across your farm." },
+                      { icon: Bot, title: "AI Assistant", color: "text-violet-500", desc: "Ask anything about irrigation, disease, yield, or harvest. Get AI-powered recommendations." },
+                      { icon: Activity, title: "Notifications", color: "text-red-500", desc: "Stay informed with alerts for weather changes, disease detection, and task completion." },
+                    ].map((module, i) => {
+                      const Icon = module.icon;
+                      return (
+                        <div key={i} className="glass rounded-xl p-4 flex items-start gap-3">
+                          <div className={`w-9 h-9 rounded-xl bg-current/10 flex items-center justify-center flex-shrink-0 ${module.color}`}>
+                            <Icon size={16} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{module.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{module.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sensor setup guide */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Radio size={16} className="text-primary" />
+                    How to Set Up Sensors
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {[
+                    { step: "1", title: "Open Settings > Sensors", desc: "From the Sensors tab in Settings, or directly via the Sensors page in the sidebar." },
+                    { step: "2", title: "Choose a Provider", desc: "Select METOS, Davis Instruments, CropX, Sencrop, John Deere, or bring your own API." },
+                    { step: "3", title: "Connect & Encrypt", desc: "Connect via OAuth or enter your API key, Farm ID, and Sensor ID. Credentials are encrypted at rest (AES-256-GCM)." },
+                    { step: "4", title: "Sync & Monitor", desc: "Data syncs automatically. View current readings, historical charts, and AI recommendations on the monitoring dashboard." },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl hover:bg-muted/50">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                        {item.step}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <Link href="/dashboard/sensors/connect">
+                    <Button variant="outline" size="sm">
+                      <Radio size={14} className="mr-1" />
+                      Go to Connect Sensors
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* AI recommendation guide */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Bot size={16} className="text-violet-500" />
+                    About AI Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+AgroVision&apos;s AI combines your connected sensor data with live weather forecasts, satellite
+                    vegetation indices (NDVI/EVI/NDMI), crop information, and historical field data to generate
+                    actionable recommendations for:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Irrigation timing", "Nutrient application", "Pest & disease risk", "Yield optimization", "Harvest scheduling"].map((item, i) => (
+                      <Badge key={i} variant="secondary" className="text-[11px]">
+                        {item}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Access these insights from the AI Assistant or the Sensor Monitoring Dashboard.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Quick navigation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <BookOpen size={16} className="text-primary" />
+                    Quick Links
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { href: "/dashboard/sensors/connect", label: "Connect Sensors", icon: Plug },
+                      { href: "/dashboard/sensors/dashboard", label: "Sensor Dashboard", icon: LayoutDashboard },
+                      { href: "/dashboard/weather", label: "Weather", icon: Cloud },
+                      { href: "/dashboard/ai", label: "AI Assistant", icon: Bot },
+                      { href: "/dashboard/farm-map", label: "Farm Map", icon: Map },
+                      { href: "/dashboard/fields", label: "Fields", icon: Sprout },
+                    ].map((link, i) => {
+                      const Icon = link.icon;
+                      return (
+                        <Link key={i} href={link.href}>
+                          <Button variant="outline" size="sm">
+                            <Icon size={14} className="mr-1" />
+                            {link.label}
+                          </Button>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Team */}
