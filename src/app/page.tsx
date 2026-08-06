@@ -653,7 +653,7 @@ export default function LandingPage() {
             <motion.div variants={fadeInUp} className="glass-card glass-solid p-8 text-center">
               <Heart size={24} className="mx-auto mb-4 text-primary" />
               <p className="text-lg md:text-xl font-medium leading-relaxed max-w-3xl mx-auto">
-                "Agrovision is more than just a project it is my mission to connect technology with
+"Agrovision is more than just a project it is my mission to connect technology with
                 agriculture and create solutions that improve the way we grow food."
               </p>
               <p className="text-sm text-muted-foreground mt-4">Anastasios Karaivazoglou, Founder of AgroVision</p>
@@ -715,9 +715,12 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Button variant={plan.popular ? "default" : "outline"} className="w-full">
-                  {plan.popular ? t("landing.pricingStartFreeTrial") : t("landing.pricingGetStarted")}
-                </Button>
+<Link href="/pricing" className="block w-full">
+                  <Button variant={plan.popular ? "default" : "outline"} className="w-full">
+                    {plan.popular ? t("landing.pricingStartFreeTrial") : t("landing.pricingGetStarted")}
+                    <ArrowRight size={16} className="ml-2" />
+                  </Button>
+                </Link>
               </motion.div>
             ))}
           </motion.div>

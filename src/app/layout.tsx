@@ -7,6 +7,7 @@ import { PwaProvider } from "@/components/pwa-provider";
 import { UnitsProvider } from "@/components/units-provider";
 import { CurrencyProvider } from "@/components/currency-provider";
 import { LanguageProvider } from "@/components/language-provider";
+import { SubscriptionProvider } from "@/lib/billing/subscription-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,9 +54,11 @@ export default function RootLayout({
             <CurrencyProvider>
               <LanguageProvider>
                 <AuthProvider>
-                  <PwaProvider>
-                    {children}
-                  </PwaProvider>
+                  <SubscriptionProvider>
+                    <PwaProvider>
+                      {children}
+                    </PwaProvider>
+                  </SubscriptionProvider>
                 </AuthProvider>
               </LanguageProvider>
             </CurrencyProvider>

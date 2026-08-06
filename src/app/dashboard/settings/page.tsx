@@ -28,12 +28,13 @@ import {
   Ruler,
   Thermometer,
   Save,
-  User,
+User,
   Lock,
-Radio,
+  Radio,
   Plug,
   ArrowRight,
   BookOpen,
+  CreditCard,
   LayoutDashboard,
   Map,
   Cloud,
@@ -45,26 +46,41 @@ Radio,
   ShoppingBag,
   BarChart3,
   DollarSign,
-  Bot,
+Bot,
   Activity,
   CheckCircle2,
+  Crown,
+  RefreshCcw,
 } from "lucide-react";
 import Link from "next/link";
+import { useSubscription } from "@/lib/billing/subscription-provider";
+import { openBillingPortal } from "@/lib/billing/client";
+import { PlanBadge } from "@/components/billing/plan-badge";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { unitSystem, setUnitSystem } = useUnits();
   const { currency, setCurrency } = useCurrency();
   const { language, setLanguage, t } = useLanguage();
+  const { plan: currentPlan, subscription, billingCycle } = useSubscription();
   const [activeTab, setActiveTab] = useState("general");
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      await openBillingPortal("/dashboard/settings");
+    } catch (error) {
+      console.error("Failed to open billing portal:", error);
+    }
+  };
 
 const tabs = [
     { id: "general", label: t("tabs.general"), icon: Settings },
     { id: "profile", label: t("tabs.profile"), icon: User },
     { id: "notifications", label: t("tabs.notifications"), icon: Bell },
     { id: "security", label: t("tabs.security"), icon: Shield },
+    { id: "billing", label: "Billing", icon: CreditCard },
     { id: "team", label: t("tabs.team"), icon: Users },
-{ id: "sensors", label: "Sensors", icon: Radio },
+    { id: "sensors", label: "Sensors", icon: Radio },
     { id: "tutorial", label: "Tutorial", icon: BookOpen },
   ];
   const unitOptions: { value: UnitSystem; label: string; icon: typeof Thermometer; desc: string }[] = [
@@ -545,6 +561,66 @@ AgroVision&apos;s AI combines your connected sensor data with live weather forec
                 </CardContent>
               </Card>
             </div>
+          )}
+
+{/* Billing */}
+          {activeTab === "billing" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard size={16} className="text-primary" />
+                  Billing & Subscription
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-primary/20 bg-primary/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                      <Crown size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{currentPlan?.name || "Starter"} plan</p>
+                      <p className="text-xs text-muted-foreground">
+${Math.round(((billingCycle === "yearly" ? currentPlan?.yearlyPrice : currentPlan?.monthlyPrice) || 2900) / 100)}
+                        /{billingCycle === "yearly" ? "yr" : "mo"} · {billingCycle === "yearly" ? "billed annually" : "billed monthly"}
+                      </p>
+                    </div>
+                  </div>
+                  <PlanBadge />
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Plan status</p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-sm font-medium capitalize">{subscription?.status || "active"}</span>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Next renewal</p>
+                    <p className="text-sm font-medium">
+                      {subscription?.currentPeriodEnd
+                        ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button variant="outline" onClick={handleOpenBillingPortal}>
+                    <RefreshCcw size={16} className="mr-1" />
+                    Manage Invoices
+                  </Button>
+                  <Link href="/dashboard/billing">
+                    <Button>
+                      View Billing Dashboard
+                      <ArrowRight size={16} className="ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Team */}
