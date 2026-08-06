@@ -7,6 +7,7 @@ import {
   type AMImageStats,
 } from "@/lib/agromonitoring-service";
 import { computeAnalytics } from "@/lib/ndvi-analytics";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/agromonitoring/satellite
@@ -21,6 +22,10 @@ import { computeAnalytics } from "@/lib/ndvi-analytics";
  *   - days: look-back period in days (default: 180)
  */
 export async function GET(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const polygonId = searchParams.get("polygonId");

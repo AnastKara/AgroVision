@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAIRecommendations } from "@/lib/sensor-integration-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/sensors/ai
@@ -7,6 +8,10 @@ import { getAIRecommendations } from "@/lib/sensor-integration-service";
  * weather, satellite, crop, and historical field data.
  */
 export async function GET() {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const recommendations = await getAIRecommendations();
     return NextResponse.json({ recommendations });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPaymentProvider } from "@/lib/billing/providers";
-import type { WebhookEventType } from "@/lib/billing/types";
+import { processWebhookEvent } from "@/lib/billing/webhook-handler";
 
 /**
  * POST /api/billing/webhook
@@ -36,8 +36,12 @@ export async function POST(request: Request) {
     // Verify the webhook signature — throws if invalid
     const event = await provider.verifyWebhookSignature(payload, signature);
 
-    // Process the verified event
-    const result = await provider.handleWebhookEvent(event);
+// Process the verified event (provider-level extraction)
+    const extracted = await provider.handleWebhookEvent(event);
+
+    // Persist changes to the database + send transactional emails
+    // This is the single source of truth for subscription state.
+    const result = await processWebhookEvent(extracted);
 
     if (!result.success) {
       console.error("Webhook processing failed:", event.type, result.error);
@@ -51,7 +55,9 @@ export async function POST(request: Request) {
     console.log(
       `[Webhook] ${event.type} processed successfully${
         result.subscriptionId ? ` (subscription: ${result.subscriptionId})` : ""
-      }${result.customerId ? ` (customer: ${result.customerId})` : ""}`
+      }${result.customerId ? ` (customer: ${result.customerId})` : ""}${
+        result.userId ? ` (user: ${result.userId})` : ""
+      }`
     );
 
     // Return 200 to acknowledge receipt

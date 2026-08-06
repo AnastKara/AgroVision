@@ -13,9 +13,11 @@ import {
   Calendar,
   RefreshCcw,
   Shield,
-  Receipt,
+Receipt,
   Loader2,
   PartyPopper,
+  Download,
+  FlaskConical,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,9 +25,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useSubscription } from "@/lib/billing/subscription-provider";
-import { openBillingPortal } from "@/lib/billing/client";
+import { openBillingPortal, downloadInvoice, simulateWebhook } from "@/lib/billing/client";
 import { PLANS, PLANS_LIST } from "@/lib/billing/plans";
-import type { PaymentRecord } from "@/lib/billing/types";
+import type { PaymentRecord, PlanId } from "@/lib/billing/types";
 import { PlanBadge } from "@/components/billing/plan-badge";
 import { cn } from "@/lib/utils";
 
@@ -40,11 +42,39 @@ export default function BillingPage() {
     paymentHistory,
     loading,
   } = useSubscription();
-  const [portalLoading, setPortalLoading] = useState(false);
+const [portalLoading, setPortalLoading] = useState(false);
+  const [downloadLoadingId, setDownloadLoadingId] = useState<string | null>(null);
+  const [simulateLoading, setSimulateLoading] = useState(false);
+  const [simulateMessage, setSimulateMessage] = useState<string | null>(null);
 
   const status = subscription?.status;
   const currentPlan = plan || PLANS[planId];
   const limits = currentPlan.limits;
+
+  const handleDownloadInvoice = async (paymentId: string) => {
+    setDownloadLoadingId(paymentId);
+    try {
+      await downloadInvoice(paymentId);
+    } catch (error) {
+      console.error("Failed to download invoice:", error);
+    } finally {
+      setDownloadLoadingId(null);
+    }
+  };
+
+  const handleSimulate = async (event: string) => {
+    setSimulateLoading(true);
+    setSimulateMessage(null);
+    try {
+      await simulateWebhook({ event, planId: planId as PlanId, billingCycle });
+      setSimulateMessage(`Simulated "${event}" successfully. Refreshing...`);
+      setTimeout(() => router.refresh(), 800);
+    } catch (error) {
+      setSimulateMessage(error instanceof Error ? error.message : "Simulation failed");
+    } finally {
+      setSimulateLoading(false);
+    }
+  };
 
   const statusLabel: Record<string, { label: string; className: string }> = {
     active: { label: "Active", className: "bg-green-500/10 text-green-500 border-green-500/20" },
@@ -309,10 +339,15 @@ export default function BillingPage() {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {(paymentHistory as PaymentRecord[]).map((payment, i) => (
+{(paymentHistory as PaymentRecord[]).map((payment, i) => {
+                    const invoiceNumber = `INV-${payment.providerPaymentId
+                      .replace(/^in_/, "")
+                      .slice(0, 8)
+                      .toUpperCase()}`;
+                    return (
                     <div
                       key={i}
-                      className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/50"
+                      className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/50 gap-3 flex-wrap"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -321,6 +356,7 @@ export default function BillingPage() {
                         <div>
                           <p className="text-sm font-medium">{payment.description}</p>
                           <p className="text-xs text-muted-foreground">
+                            {invoiceNumber} ·{" "}
                             {payment.paidAt
                               ? new Date(payment.paidAt).toLocaleDateString()
                               : "Processing"}
@@ -342,9 +378,25 @@ export default function BillingPage() {
                         >
                           {payment.status}
                         </Badge>
+                        {payment.id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(payment.id)}
+                            disabled={downloadLoadingId === payment.id}
+                          >
+                            {downloadLoadingId === payment.id ? (
+                              <Loader2 size={14} className="animate-spin mr-1" />
+                            ) : (
+                              <Download size={14} className="mr-1" />
+                            )}
+                            Invoice
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -375,10 +427,55 @@ export default function BillingPage() {
                 <span className="text-muted-foreground">Trial</span>
                 <span className="font-medium">{isTrialing ? "Active" : "—"}</span>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+<div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
                 <span className="text-muted-foreground">Payment method</span>
                 <span className="font-medium">—</span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Development Testing (test mode only) */}
+          <Card className="border-dashed">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FlaskConical size={16} className="text-amber-500" />
+                Development Testing
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Simulate Stripe webhook events to test the subscription lifecycle,
+                transactional emails, and invoices — no real Stripe account required.
+                Disabled in production.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: "checkout.completed", label: "Checkout Completed" },
+                  { key: "subscription.created", label: "Sub Created" },
+                  { key: "subscription.updated", label: "Sub Activated" },
+                  { key: "invoice.paid", label: "Invoice Paid" },
+                  { key: "invoice.failed", label: "Invoice Failed" },
+                  { key: "subscription.deleted", label: "Sub Canceled" },
+                ].map((e) => (
+                  <Button
+                    key={e.key}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSimulate(e.key)}
+                    disabled={simulateLoading}
+                  >
+                    {simulateLoading ? (
+                      <Loader2 size={14} className="animate-spin mr-1" />
+                    ) : (
+                      <FlaskConical size={14} className="mr-1" />
+                    )}
+                    {e.label}
+                  </Button>
+                ))}
+              </div>
+              {simulateMessage && (
+                <p className="text-xs text-primary">{simulateMessage}</p>
+              )}
             </CardContent>
           </Card>
         </>

@@ -4,6 +4,7 @@ import {
   listPolygons,
   searchSatelliteImages,
 } from "@/lib/agromonitoring-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/weather/satellite
@@ -16,6 +17,10 @@ import {
  *   - days: days to look back for satellite images (default: 7)
  */
 export async function GET(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   const { searchParams } = new URL(request.url);
   const lat = searchParams.get("lat") || process.env.DEFAULT_FARM_LAT || "40.7128";
   const lon = searchParams.get("lon") || process.env.DEFAULT_FARM_LON || "-74.006";

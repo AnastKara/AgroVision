@@ -19,10 +19,18 @@ export default function RegisterPage() {
   const { signUp, isConfigured } = useAuth();
   const { t } = useLanguage();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    // Validate email format before submitting
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
 
     // If Supabase is not configured, just redirect to dashboard (dev mode)
     if (!isConfigured) {
@@ -30,12 +38,22 @@ export default function RegisterPage() {
       return;
     }
 
-    const { error } = await signUp(email, password, name);
+const { error } = await signUp(email, password, name);
     setLoading(false);
     if (error) {
       setError(error.message);
     } else {
-      window.location.href = "/dashboard";
+      // Create the user record and send the verification email
+      try {
+        await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        });
+      } catch (err) {
+        console.error("Failed to create user record:", err);
+      }
+      window.location.href = "/verify-email";
     }
   };
 

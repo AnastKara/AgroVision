@@ -9,6 +9,7 @@
 import type {
   BillingCycle,
   PaymentProvider,
+  PaymentRecord,
   PlanId,
   SubscriptionStatus,
   UserSubscription,
@@ -20,6 +21,7 @@ import { DEFAULT_PLAN_ID } from "./plans";
 // ============================================================
 
 const subscriptionsStore: UserSubscription[] = [];
+const paymentRecordsStore: PaymentRecord[] = [];
 
 // ============================================================
 // Types
@@ -193,7 +195,12 @@ export async function deleteSubscription(userId: string): Promise<boolean> {
 }
 
 /**
- * Get the default subscription for a user (Starter plan, active).
+ * Get the default subscription record for a user.
+ *
+ * IMPORTANT: New users are created with status "incomplete" — they are NOT
+ * granted an active subscription. Access is only granted when a verified
+ * Stripe webhook sets the status to "active" or "trialing". This prevents
+ * the paywall bypass where new users could access the dashboard for free.
  */
 export async function getOrCreateDefaultSubscription(
   userId: string
@@ -204,7 +211,7 @@ export async function getOrCreateDefaultSubscription(
   return upsertSubscription({
     userId,
     planId: DEFAULT_PLAN_ID,
-    status: "active",
+    status: "incomplete",
     billingCycle: "monthly",
     provider: "stripe",
   });
@@ -219,28 +226,66 @@ export async function getAllSubscriptions(): Promise<UserSubscription[]> {
 
 /**
  * Get payment history for a user.
- * Currently returns mock data; swap with actual payment records DB.
+ * Returns actual payment records, sorted by newest first.
  */
-export async function getPaymentHistory(userId: string) {
-  // Future: replace with Supabase query to payment_records table
-  const subscription = await getSubscriptionForUser(userId);
-  if (!subscription) return [];
+export async function getPaymentHistory(userId: string): Promise<PaymentRecord[]> {
+  return paymentRecordsStore
+    .filter((p) => p.userId === userId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .map((p) => ({ ...p }));
+}
 
-  return [
-    {
-      id: `pay_${Date.now()}_1`,
-      userId,
-      subscriptionId: subscription.id,
-      providerPaymentId: `mock_inv_${Date.now()}`,
-      stripeCustomerId: subscription.stripeCustomerId,
-      amount: subscription.planId === "professional" ? 7900 : 2900,
-      currency: "usd",
-      status: "paid" as const,
-      description: `${subscription.planId} plan — ${subscription.billingCycle} billing`,
-      billingCycle: subscription.billingCycle,
-      paidAt: subscription.currentPeriodStart,
-      dueAt: subscription.currentPeriodEnd || new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    },
-  ];
+/**
+ * Get a payment record by its provider payment ID (e.g. Stripe invoice ID).
+ */
+export async function getPaymentRecordByProviderId(
+  providerPaymentId: string
+): Promise<PaymentRecord | null> {
+  const record = paymentRecordsStore.find(
+    (p) => p.providerPaymentId === providerPaymentId
+  );
+  return record ? { ...record } : null;
+}
+
+/**
+ * Get a payment record by its internal ID.
+ */
+export async function getPaymentRecordById(
+  id: string
+): Promise<PaymentRecord | null> {
+  const record = paymentRecordsStore.find((p) => p.id === id);
+  return record ? { ...record } : null;
+}
+
+/**
+ * Upsert a payment record (create or update based on providerPaymentId).
+ */
+export async function upsertPaymentRecord(
+  input: Omit<PaymentRecord, "id" | "createdAt">
+): Promise<PaymentRecord> {
+  const existing = paymentRecordsStore.find(
+    (p) => p.providerPaymentId === input.providerPaymentId
+  );
+
+  if (existing) {
+    const updated: PaymentRecord = {
+      ...existing,
+      ...input,
+    };
+    const index = paymentRecordsStore.findIndex(
+      (p) => p.id === existing.id
+    );
+    if (index !== -1) {
+      paymentRecordsStore[index] = updated;
+    }
+    return { ...updated };
+  }
+
+  const record: PaymentRecord = {
+    ...input,
+    id: `pay_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+    createdAt: new Date().toISOString(),
+  };
+  paymentRecordsStore.push(record);
+  return { ...record };
 }

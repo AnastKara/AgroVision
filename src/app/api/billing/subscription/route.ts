@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/billing/providers";
 import {
-  getOrCreateDefaultSubscription,
   getPaymentHistory,
-  getSubscriptionForUser,
-  updateSubscription,
 } from "@/lib/billing/subscription-service";
+import { getSubscriptionMetadata } from "@/lib/billing/subscription-store";
 import { PLANS } from "@/lib/billing/plans";
 import type { SubscriptionStatus } from "@/lib/billing/types";
 
@@ -21,8 +19,10 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // Dev mode: if Supabase is not configured, return a default Starter
-    // subscription so the client provider works without a backend.
+// Dev mode: if Supabase is not configured, there is no way to verify a
+    // real subscription. Return the DEFAULT state (status "incomplete") so the
+    // paywall is enforced — a user is NEVER granted "active" without a verified
+    // Stripe/webhook flow. This prevents the free-access bypass.
     if (!supabase) {
       const starterPlan = PLANS.starter;
       return NextResponse.json({
@@ -30,7 +30,7 @@ export async function GET() {
           id: "dev_sub",
           userId: "dev-user",
           planId: "starter" as const,
-          status: "active",
+          status: "incomplete",
           stripeCustomerId: null,
           stripeSubscriptionId: null,
           billingCycle: "monthly",
@@ -56,7 +56,7 @@ export async function GET() {
       });
     }
 
-    // Verify user is authenticated
+// Verify user is authenticated
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -65,8 +65,27 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get or create the user's subscription record (defaults to Starter)
-    const subscription = await getOrCreateDefaultSubscription(user.id);
+    // Read the authoritative subscription status from Supabase (server-side,
+    // persisted via Stripe webhooks). Never trust the frontend.
+    const metadata = await getSubscriptionMetadata(user.id);
+
+    // Build the subscription object from the persisted metadata.
+    const subscription = {
+      id: `sub_${user.id}`,
+      userId: user.id,
+      planId: metadata.subscription_plan,
+      status: metadata.subscription_status,
+      stripeCustomerId: metadata.stripe_customer_id,
+      stripeSubscriptionId: metadata.stripe_subscription_id,
+      billingCycle: "monthly" as const,
+      currentPeriodStart: null,
+      currentPeriodEnd: metadata.subscription_current_period_end,
+      cancelAtPeriodEnd: false,
+      trialEnd: null,
+      provider: "stripe" as const,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
     // If the user has a Stripe subscription, verify the real status from Stripe
     let verifiedSubscription = subscription;
@@ -80,22 +99,14 @@ export async function GET() {
 
       if (stripeSub) {
         // Sync the verified status from Stripe into our DB
-        verifiedSubscription = await updateSubscription(user.id, {
+        verifiedSubscription = {
+          ...subscription,
           planId: stripeSub.planId || subscription.planId,
-          status: stripeSub.status as SubscriptionStatus,
-          billingCycle: stripeSub.billingCycle,
-          currentPeriodStart: stripeSub.currentPeriodStart
-            ? new Date(stripeSub.currentPeriodStart * 1000).toISOString()
-            : undefined,
+          status: (stripeSub.status as SubscriptionStatus) || subscription.status,
           currentPeriodEnd: stripeSub.currentPeriodEnd
             ? new Date(stripeSub.currentPeriodEnd * 1000).toISOString()
-            : undefined,
-          cancelAtPeriodEnd: stripeSub.cancelAtPeriodEnd,
-          trialEnd: stripeSub.trialEnd
-            ? new Date(stripeSub.trialEnd * 1000).toISOString()
-            : undefined,
-          stripeSubscriptionId: stripeSub.id,
-        }) || subscription;
+            : subscription.currentPeriodEnd,
+        };
       }
     }
 

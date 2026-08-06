@@ -133,3 +133,51 @@ export async function openBillingPortal(returnUrl?: string): Promise<void> {
     window.location.href = returnUrl || "/dashboard/billing";
   }
 }
+
+/**
+ * Download an invoice PDF for a payment record.
+ */
+export async function downloadInvoice(paymentId: string): Promise<void> {
+  const response = await fetch(
+    `/api/billing/invoices/${paymentId}/download`,
+    { method: "GET", cache: "no-store" }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Failed to download invoice" }));
+    throw new Error(error.error || "Failed to download invoice");
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `invoice-${paymentId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  a.remove();
+}
+
+/**
+ * Simulate a Stripe webhook event (dev mode only).
+ * Used to test the subscription lifecycle without a real Stripe account.
+ */
+export async function simulateWebhook(params: {
+  event: string;
+  planId?: PlanId;
+  billingCycle?: BillingCycle;
+}): Promise<{ received: boolean; event: string }> {
+  const response = await fetch("/api/billing/simulate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "Simulation failed" }));
+    throw new Error(error.error || "Simulation failed");
+  }
+
+  return await response.json();
+}

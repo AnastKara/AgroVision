@@ -35,9 +35,14 @@ export async function POST(request: Request) {
         request.headers.get("origin") ||
         process.env.APP_URL ||
         "http://localhost:3000";
-      const successUrl =
+const successUrl =
         body.successUrl || `${origin}/dashboard/billing?success=true`;
-      const url = `${origin}/checkout?plan=${planId}&cycle=${billingCycle}&success=${encodeURIComponent(successUrl)}`;
+      const cancelUrl =
+        body.cancelUrl || `${origin}/pricing?canceled=true`;
+      // In dev mode (no Stripe), the /checkout page creates a session and
+      // redirects to Stripe's hosted Checkout when available, otherwise
+      // falls back to the success page. No card details are collected.
+      const url = `${origin}/checkout?plan=${planId}&cycle=${billingCycle}&success=${encodeURIComponent(successUrl)}&cancel=${encodeURIComponent(cancelUrl)}`;
       return NextResponse.json({
         url,
         sessionId: `mock_cs_${Date.now()}`,

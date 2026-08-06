@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { getFields, createField, type CreateFieldInput } from "@/lib/fields-service";
 import { createPolygon } from "@/lib/agromonitoring-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/fields
  * List all fields
  */
 export async function GET() {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const fields = await getFields();
     return NextResponse.json({ fields });
@@ -32,6 +37,10 @@ export async function GET() {
  * }
  */
 export async function POST(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
 

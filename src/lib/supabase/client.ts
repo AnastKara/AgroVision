@@ -1,17 +1,20 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Official AgroVision Supabase project credentials.
+// They can be overridden via environment variables, but these are the
+// defaults so Google OAuth works out of the box.
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  "https://nbmcnvqgwemzltfdgpbb.supabase.co";
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ibWNudnFnd2Vtemx0ZmRncGJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMTk3MjEsImV4cCI6MjEwMDc5NTcyMX0.u9CRuQUBLppGwjcFxDTmf8xd6G0nKFVcc9clSdX_XRg";
 
 let client: ReturnType<typeof createBrowserClient> | null = null;
 
 export function createClient() {
-  // Return null if Supabase is not configured
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === "your_supabase_project_url_here") {
-    return null as any;
-  }
   if (!client) {
-    client = createBrowserClient(supabaseUrl, supabaseAnonKey);
+    client = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
   return client;
 }

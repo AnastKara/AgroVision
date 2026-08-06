@@ -8,7 +8,7 @@ import {
   useCallback,
 } from "react";
 import { createClient } from "./client";
-import type { User, AuthError } from "@supabase/supabase-js";
+import type { User, AuthError, Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
 type Provider = "google" | "github";
@@ -20,7 +20,10 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
   signInWithProvider: (provider: Provider) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  getSession: () => Promise<Session | null>;
   isConfigured: boolean;
+  emailVerified: boolean;
+  resendVerification: () => Promise<{ error: AuthError | string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,7 +33,10 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: null }),
   signInWithProvider: async () => ({ error: null }),
   signOut: async () => {},
+  getSession: async () => null,
   isConfigured: false,
+  emailVerified: false,
+  resendVerification: async () => ({ error: null }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -38,11 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
-  const isConfigured = !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL !== "your_supabase_project_url_here"
-  );
+  // Supabase is always configured because the client/server clients fall back
+  // to the hardcoded AgroVision project credentials when env vars are absent.
+  const isConfigured = true;
 
   useEffect(() => {
     if (!supabase?.auth) {
@@ -126,8 +130,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/");
   }, []);
 
+  const getSession = useCallback(async (): Promise<Session | null> => {
+    if (!supabase?.auth) return null;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session;
+  }, []);
+
+  const resendVerification = useCallback(async () => {
+    if (!supabase?.auth) {
+      return { error: null };
+    }
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { error: data.error || "Failed to resend verification email" };
+      }
+      return { error: null };
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Failed to resend verification email",
+      };
+    }
+  }, []);
+
+  const emailVerified = !!user?.email_confirmed_at;
+
   return (
-<AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithProvider, signOut, isConfigured }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signUp,
+        signInWithProvider,
+        signOut,
+        getSession,
+        isConfigured,
+        emailVerified,
+        resendVerification,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -136,4 +183,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-

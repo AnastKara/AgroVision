@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { syncIntegration, getSyncLogs } from "@/lib/sensor-integration-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/sensors/sync?integrationId=<id>
  * List synchronization history for an integration (or all).
  */
 export async function GET(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const integrationId = searchParams.get("integrationId") || undefined;
@@ -24,6 +29,10 @@ export async function GET(request: Request) {
  * Body: { integrationId: string }
  */
 export async function POST(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     if (!body.integrationId) {

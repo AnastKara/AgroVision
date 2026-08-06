@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Check, Sparkles, ArrowRight, Leaf, Shield, Zap } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Check, Sparkles, ArrowRight, Leaf, Shield, Zap, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PLANS_LIST, getPlanDisplayPrice } from "@/lib/billing/plans";
 import { redirectToCheckout } from "@/lib/billing/client";
@@ -12,10 +12,12 @@ import { useSubscription } from "@/lib/billing/subscription-provider";
 import { useAuth } from "@/lib/supabase/auth-provider";
 import { cn } from "@/lib/utils";
 
-export default function PricingPage() {
+function PricingContent() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 const router = useRouter();
+  const searchParams = useSearchParams();
+  const accessDenied = searchParams.get("accessDenied") === "true";
   const { user, isConfigured } = useAuth();
   const { planId, isActive } = useSubscription();
 
@@ -78,7 +80,7 @@ const handleSelectPlan = async (planId: string) => {
             </div>
             <span className="text-lg font-bold">AgroVision</span>
           </Link>
-          <div className="flex items-center gap-3">
+<div className="flex items-center gap-3">
             <Link href="/login">
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
@@ -88,6 +90,18 @@ const handleSelectPlan = async (planId: string) => {
           </div>
         </div>
       </header>
+
+      {/* Access denied banner */}
+      {accessDenied && (
+        <div className="bg-destructive/10 border-b border-destructive/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-center gap-2 text-sm text-destructive">
+            <Lock size={16} className="flex-shrink-0" />
+            <span className="font-medium">
+              You need an active subscription to access AgroVision.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Hero */}
       <section className="py-16 lg:py-24 text-center px-4">
@@ -277,7 +291,21 @@ onClick={() => handleSelectPlan(plan.id)}
             © {new Date().getFullYear()} AgroVision. All rights reserved.
           </p>
         </div>
-      </footer>
+</footer>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Zap className="animate-pulse text-primary" />
+        </div>
+      }
+    >
+      <PricingContent />
+    </Suspense>
   );
 }

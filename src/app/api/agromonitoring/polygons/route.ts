@@ -10,6 +10,7 @@ import {
   getPolygonSoil,
   type AMPolygon,
 } from "@/lib/agromonitoring-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/agromonitoring/polygons
@@ -20,6 +21,10 @@ import {
  *   - include: comma-separated: "weather", "satellite", "soil" (only when id is provided)
  */
 export async function GET(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -73,6 +78,10 @@ export async function GET(request: Request) {
  * }
  */
 export async function POST(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     if (!process.env.AGROMONITORING_API_KEY) {
       return NextResponse.json(
@@ -114,6 +123,10 @@ export async function POST(request: Request) {
  * }
  */
 export async function PUT(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     if (!process.env.AGROMONITORING_API_KEY) {
       return NextResponse.json(
@@ -153,6 +166,10 @@ export async function PUT(request: Request) {
  * }
  */
 export async function DELETE(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     if (!process.env.AGROMONITORING_API_KEY) {
       return NextResponse.json(

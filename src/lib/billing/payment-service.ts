@@ -10,7 +10,6 @@ import type {
   BillingCycle,
   PlanId,
   PaymentProvider,
-  UserSubscription,
   WebhookEventType,
 } from "./types";
 
@@ -95,6 +94,10 @@ export interface WebhookHandlerResult {
   subscriptionId?: string;
   /** Relevant customer ID if any */
   customerId?: string;
+  /** Internal user ID, if resolvable from metadata */
+  userId?: string;
+  /** Raw event data for downstream processing (e.g. invoice sync) */
+  data?: Record<string, unknown>;
   /** Any error message */
   error?: string;
 }

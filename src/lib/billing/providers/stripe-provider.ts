@@ -315,7 +315,7 @@ export class StripeProvider implements PaymentService {
     };
   }
 
-  async handleWebhookEvent(event: {
+async handleWebhookEvent(event: {
     type: WebhookEventType | string;
     data: Record<string, unknown>;
   }): Promise<WebhookHandlerResult> {
@@ -330,12 +330,17 @@ export class StripeProvider implements PaymentService {
         ? rawCustomer
         : (rawCustomer as { id?: string } | undefined)?.id || null;
 
+    // Try to resolve the internal userId from metadata
+    const metadata = (data as { metadata?: Record<string, string> }).metadata;
+    const userId = metadata?.userId || (data as { client_reference_id?: string }).client_reference_id || null;
+
     switch (type) {
       case "checkout.session.completed": {
         const session = data as {
           customer?: string;
           subscription?: string;
           client_reference_id?: string;
+          metadata?: Record<string, string>;
         };
 
         return {
@@ -347,6 +352,8 @@ export class StripeProvider implements PaymentService {
               : undefined,
           customerId:
             typeof session.customer === "string" ? session.customer : undefined,
+          userId: session.metadata?.userId || session.client_reference_id || undefined,
+          data,
         };
       }
 
@@ -356,6 +363,7 @@ export class StripeProvider implements PaymentService {
           id?: string;
           customer?: string;
           status?: string;
+          metadata?: Record<string, string>;
           items?: { data?: { price?: { id?: string } }[] };
         };
 
@@ -365,17 +373,25 @@ export class StripeProvider implements PaymentService {
           subscriptionId: sub.id,
           customerId:
             typeof sub.customer === "string" ? sub.customer : undefined,
+          userId: sub.metadata?.userId || undefined,
+          data,
         };
       }
 
       case "customer.subscription.deleted": {
-        const sub = data as { id?: string; customer?: string };
+        const sub = data as {
+          id?: string;
+          customer?: string;
+          metadata?: Record<string, string>;
+        };
         return {
           success: true,
           eventType: type,
           subscriptionId: sub.id,
           customerId:
             typeof sub.customer === "string" ? sub.customer : undefined,
+          userId: sub.metadata?.userId || undefined,
+          data,
         };
       }
 
@@ -386,8 +402,18 @@ export class StripeProvider implements PaymentService {
           subscription?: string;
           customer?: string;
           amount_paid?: number;
+          amount_due?: number;
           currency?: string;
           status?: string;
+          hosted_invoice_url?: string;
+          invoice_pdf?: string;
+          lines?: {
+            data?: {
+              description?: string;
+              period?: { start?: number; end?: number };
+            }[];
+          };
+          created?: number;
         };
 
         return {
@@ -399,6 +425,8 @@ export class StripeProvider implements PaymentService {
               : undefined,
           customerId:
             typeof invoice.customer === "string" ? invoice.customer : undefined,
+          userId: userId || undefined,
+          data,
         };
       }
 
@@ -408,6 +436,8 @@ export class StripeProvider implements PaymentService {
           eventType: type,
           subscriptionId: subscriptionId || undefined,
           customerId: customerId || undefined,
+          userId: userId || undefined,
+          data,
         };
     }
   }

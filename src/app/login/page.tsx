@@ -29,7 +29,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -38,6 +38,8 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
+      // Redirect to dashboard; the proxy/dashboard layout will enforce
+      // email verification and send unverified users to /verify-email.
       window.location.href = "/dashboard";
     }
   };

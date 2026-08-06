@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getField, updateField, deleteField } from "@/lib/fields-service";
 import { getPolygon, updatePolygon, deletePolygon, getPolygonWeather, getPolygonSatellite, getPolygonSoil } from "@/lib/agromonitoring-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/fields/[id]
@@ -13,6 +14,10 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
@@ -83,6 +88,10 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -127,6 +136,10 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 

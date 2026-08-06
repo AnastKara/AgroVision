@@ -4,12 +4,17 @@ import {
   addIntegration,
   removeIntegration,
 } from "@/lib/sensor-integration-service";
+import { requireApiAccess } from "@/lib/billing/require-access";
 
 /**
  * GET /api/sensors/integrations
  * List all connected sensor integrations.
  */
 export async function GET() {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const integrations = await getIntegrations();
     return NextResponse.json({ integrations });
@@ -38,6 +43,10 @@ export async function GET() {
  * }
  */
 export async function POST(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
 
@@ -79,6 +88,10 @@ export async function POST(request: Request) {
  * Disconnect a sensor integration.
  */
 export async function DELETE(request: Request) {
+  // Protected: requires auth + verified email + active subscription.
+  const denied = await requireApiAccess();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
