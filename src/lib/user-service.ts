@@ -18,6 +18,7 @@
  */
 
 import crypto from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { PlanId, SubscriptionStatus } from "./billing/types";
 
 // ============================================================
@@ -34,6 +35,16 @@ export interface User {
   subscription_plan: PlanId;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+}
+
+/**
+ * Extended profile fields persisted to Supabase `user_metadata`.
+ * These are the editable profile fields shown in Settings.
+ */
+export interface UserProfileFields {
+  name?: string;
+  farm_name?: string;
+  phone?: string;
 }
 
 export interface VerificationToken {
@@ -262,6 +273,95 @@ export async function canAccessDashboard(userId: string): Promise<boolean> {
 export async function isEmailVerified(userId: string): Promise<boolean> {
   const user = await getUserById(userId);
   return !!user?.email_verified;
+}
+
+// ============================================================
+// Profile (Supabase-backed persistence)
+// ============================================================
+
+/**
+ * Read a user's profile fields (name, farm_name, phone) from Supabase
+ * `user_metadata` via the admin client. Falls back to the in-memory store.
+ * Returns null if the user is not found.
+ */
+export async function getProfile(
+  userId: string
+): Promise<UserProfileFields | null> {
+  const admin = createAdminClient();
+  if (admin) {
+    const { data, error } = await admin.auth.admin.getUserById(userId);
+    if (!error && data?.user) {
+      const md = data.user.user_metadata ?? {};
+      return {
+        name:
+          (md.name as string) ||
+          (data.user.email?.split("@")[0] ?? ""),
+        farm_name: (md.farm_name as string) || undefined,
+        phone: (md.phone as string) || undefined,
+      };
+    }
+  }
+
+  const user = await getUserById(userId);
+  if (!user) return null;
+  return { name: user.name };
+}
+
+/**
+ * Update a user's profile fields in Supabase `user_metadata` via the admin
+ * client. Preserves all existing metadata fields. Falls back to the
+ * in-memory store when Supabase is not configured.
+ */
+export async function updateProfile(
+  userId: string,
+  input: UserProfileFields
+): Promise<UserProfileFields | null> {
+  const admin = createAdminClient();
+  const current = (await getProfile(userId)) ?? {};
+  const next: UserProfileFields = {
+    ...current,
+    ...Object.fromEntries(
+      Object.entries(input).filter(([, v]) => v !== undefined && v !== null)
+    ),
+  };
+
+  // Mirror to in-memory store
+  const user = await getUserById(userId);
+  if (user) {
+    if (next.name !== undefined) user.name = next.name;
+    saveUser(user);
+  }
+
+  if (!admin) {
+    return next;
+  }
+
+  // Read existing raw metadata to preserve other fields
+  let rawMetadata: Record<string, unknown> = {};
+  try {
+    const { data } = await admin.auth.admin.getUserById(userId);
+    rawMetadata = data?.user?.user_metadata ?? {};
+  } catch {
+    // ignore
+  }
+
+  const metadata = {
+    ...rawMetadata,
+    name: next.name,
+    farm_name: next.farm_name,
+    phone: next.phone,
+  };
+
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    user_metadata: metadata,
+  });
+
+  if (error) {
+    console.error("[user-service] Failed to update profile:", error.message);
+    return null;
+  }
+
+  return next;
 }
 
 // ============================================================

@@ -20,10 +20,23 @@ import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useLanguage } from "./language-provider";
+import { useAuth } from "@/lib/supabase/auth-provider";
 
 export default function TopNav() {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
+  const { user } = useAuth();
+
+  const displayName =
+    (user?.user_metadata?.name as string | undefined) ||
+    user?.email?.split("@")[0] ||
+    "Farm Manager";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n?.[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const [fullscreen, setFullscreen] = useState(false);
   const { isOnline, isInstallable, isInstalled, installPrompt } = usePwa();
 
@@ -124,16 +137,16 @@ export default function TopNav() {
           {fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
         </Button>
 
-        {/* Profile */}
+{/* Profile */}
         <div className="flex items-center gap-2 ml-2 pl-2 border-l border-border">
           <Avatar
-            fallback="AD"
+            fallback={initials}
             size="sm"
             className="ring-2 ring-primary/20"
           />
           <div className="hidden lg:block">
-            <p className="text-sm font-medium leading-none">{t("nav.profileTitle")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("nav.profileSubtitle")}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
           </div>
         </div>
       </div>

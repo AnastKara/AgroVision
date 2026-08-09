@@ -23,6 +23,25 @@ import {
 } from "./subscription-store";
 
 // ============================================================
+// Complimentary / Admin Free Access
+// ============================================================
+// Emails in this list are granted full access WITHOUT an active
+// subscription. This lets the owner (and any internal accounts)
+// use AgroVision for free. Email matching is case-insensitive.
+const COMPLIMENTARY_EMAILS = new Set<string>([
+  process.env.ADMIN_FREE_ACCESS_EMAIL?.toLowerCase() ?? "",
+  "anast13kara@gmail.com",
+].filter(Boolean));
+
+/**
+ * Returns true if the given email is on the complimentary/free-access list.
+ */
+export function isComplimentaryEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return COMPLIMENTARY_EMAILS.has(email.trim().toLowerCase());
+}
+
+// ============================================================
 // Result types
 // ============================================================
 
@@ -88,10 +107,14 @@ export async function checkAccess(): Promise<AccessCheckResult> {
     };
   }
 
-  // Resolve the authoritative subscription status from Supabase metadata.
+// Resolve the authoritative subscription status from Supabase metadata.
   const subscription = await getSubscriptionMetadata(user.id);
 
-  if (!isActiveStatus(subscription.subscription_status)) {
+  // Complimentary / admin free access: these accounts never need an active
+  // subscription. They are treated as having full access.
+  const isComplimentary = isComplimentaryEmail(user.email);
+
+  if (!isComplimentary && !isActiveStatus(subscription.subscription_status)) {
     return {
       allowed: false,
       userId: user.id,

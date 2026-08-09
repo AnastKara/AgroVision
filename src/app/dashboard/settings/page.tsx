@@ -56,6 +56,14 @@ import Link from "next/link";
 import { useSubscription } from "@/lib/billing/subscription-provider";
 import { openBillingPortal } from "@/lib/billing/client";
 import { PlanBadge } from "@/components/billing/plan-badge";
+import { useEffect } from "react";
+
+interface ProfileState {
+  name: string;
+  email: string;
+  farm_name: string;
+  phone: string;
+}
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -64,6 +72,64 @@ export default function SettingsPage() {
   const { language, setLanguage, t } = useLanguage();
   const { plan: currentPlan, subscription, billingCycle } = useSubscription();
   const [activeTab, setActiveTab] = useState("general");
+  const [profile, setProfile] = useState<ProfileState>({
+    name: "",
+    email: "",
+    farm_name: "",
+    phone: "",
+  });
+  const [profileError, setProfileError] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Load the authenticated user's profile on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/profile", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setProfile({
+          name: data.profile?.name ?? "",
+          email: data.profile?.email ?? "",
+          farm_name: data.profile?.farm_name ?? "",
+          phone: data.profile?.phone ?? "",
+        });
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    setProfileError("");
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.name,
+          farm_name: profile.farm_name,
+          phone: profile.phone,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save profile");
+      }
+    } catch (error) {
+      setProfileError(
+        error instanceof Error ? error.message : "Failed to save profile"
+      );
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleOpenBillingPortal = async () => {
     try {
@@ -272,7 +338,7 @@ const tabs = [
             </Card>
           )}
 
-          {/* Profile Settings */}
+{/* Profile Settings */}
           {activeTab === "profile" && (
             <Card>
               <CardHeader>
@@ -285,24 +351,42 @@ const tabs = [
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Full Name</label>
-                    <Input defaultValue="Alex Driver" />
+                    <Input
+                      value={profile.name}
+                      onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Email</label>
-                    <Input defaultValue="alex@farm.com" />
+                    <Input
+                      value={profile.email}
+                      disabled
+                      className="text-muted-foreground"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Farm Name</label>
-                    <Input defaultValue="Green Valley Farm" />
+                    <Input
+                      value={profile.farm_name}
+                      placeholder="My Farm"
+                      onChange={(e) => setProfile((p) => ({ ...p, farm_name: e.target.value }))}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Phone</label>
-                    <Input defaultValue="+1 (555) 123-4567" />
+                    <Input
+                      value={profile.phone}
+                      placeholder="+1 (555) 000-0000"
+                      onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
+                    />
                   </div>
                 </div>
-                <Button>
+                {profileError && (
+                  <p className="text-sm text-destructive">{profileError}</p>
+                )}
+                <Button onClick={handleSaveProfile} disabled={savingProfile}>
                   <Save size={16} className="mr-1" />
-                  Save Changes
+                  {savingProfile ? "Saving..." : "Save Changes"}
                 </Button>
               </CardContent>
             </Card>
