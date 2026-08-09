@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/components/language-provider";
+import DemoVideo from "@/components/demo-video";
 import {
   ArrowRight,
   ChevronDown,
@@ -50,9 +51,10 @@ const staggerContainer = {
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [email, setEmail] = useState("");
+  const [demoOpen, setDemoOpen] = useState(false);
 
   const features = [
     {
@@ -336,7 +338,7 @@ export default function LandingPage() {
                   <ArrowRight size={18} className="ml-2" />
                 </Button>
               </Link>
-              <Button variant="glass" size="xl" className="w-full sm:w-auto">
+<Button variant="glass" size="xl" className="w-full sm:w-auto" onClick={() => setDemoOpen(true)}>
                 <Play size={18} className="mr-2" />
                 {t("landing.heroSecondary")}
               </Button>
@@ -852,11 +854,14 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
+<div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
             {t("landing.footerRights")}
           </div>
         </div>
       </footer>
+
+      {/* Demo Video Modal */}
+      <DemoVideo open={demoOpen} onClose={() => setDemoOpen(false)} />
     </div>
   );
 }

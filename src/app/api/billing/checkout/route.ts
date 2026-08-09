@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/billing/providers";
 import { getStripePriceId, PLANS } from "@/lib/billing/plans";
 import { getOrCreateDefaultSubscription, upsertSubscription } from "@/lib/billing/subscription-service";
+import { writeSubscriptionMetadata } from "@/lib/billing/subscription-store";
 import type { BillingCycle, PlanId } from "@/lib/billing/types";
 
 /**
@@ -95,11 +96,24 @@ const successUrl =
       });
     }
 
-    const priceId = getStripePriceId(planId, billingCycle);
+const priceId = getStripePriceId(planId, billingCycle);
 
+    // Stripe requires absolute redirect URLs. Resolve any relative URLs
+    // passed from the client against the app's origin so Stripe never
+    // receives an invalid (relative) redirect target.
     const origin = request.headers.get("origin") || process.env.APP_URL || "http://localhost:3000";
-    const successUrl = body.successUrl || `${origin}/dashboard/billing?success=true`;
-    const cancelUrl = body.cancelUrl || `${origin}/pricing?canceled=true`;
+    const toAbsolute = (url: string | undefined, fallback: string): string => {
+      if (!url) return `${origin}${fallback}`;
+      try {
+        const parsed = new URL(url);
+        return parsed.toString();
+      } catch {
+        // Relative URL (e.g. "/dashboard/billing?success=true") → resolve it.
+        return `${origin}${url.startsWith("/") ? url : `/${url}`}`;
+      }
+    };
+    const successUrl = toAbsolute(body.successUrl, "/dashboard/billing?success=true");
+    const cancelUrl = toAbsolute(body.cancelUrl, "/pricing?canceled=true");
 
     // Create the checkout session
     const session = await provider.createCheckoutSession({
@@ -115,6 +129,46 @@ const successUrl =
         billingCycle,
       },
     });
+
+    // In dev mode (NODE_ENV !== "production"), Stripe cannot send webhook
+    // events to localhost. Activate the subscription immediately so the user
+    // gains access after returning from Stripe Checkout.
+    // In production, the Stripe Edge Function webhook handles this.
+    if (process.env.NODE_ENV !== "production") {
+      const now = Math.floor(Date.now() / 1000);
+      const periodEnd = now + (billingCycle === "yearly" ? 365 : 30) * 86400;
+      const subscriptionId = `sub_dev_${user.id.slice(0, 8)}`;
+
+      // Directly persist the subscription metadata to Supabase user_metadata.
+      // This bypasses the in-memory user store that processWebhookEvent relies
+      // on, which may not contain users who signed up via Supabase auth.
+      await writeSubscriptionMetadata(user.id, {
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        subscription_status: "active",
+        subscription_plan: planId,
+        subscription_current_period_end: new Date(periodEnd * 1000).toISOString(),
+      });
+
+      // Also update the in-memory subscription record
+      await upsertSubscription({
+        userId: user.id,
+        planId,
+        status: "active",
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        billingCycle,
+        currentPeriodStart: new Date(now * 1000).toISOString(),
+        currentPeriodEnd: new Date(periodEnd * 1000).toISOString(),
+        cancelAtPeriodEnd: false,
+        trialEnd: null,
+        provider: "stripe",
+      });
+
+      console.log(
+        `[checkout] Dev mode: activated subscription for user ${user.id} (${planId}, ${billingCycle})`
+      );
+    }
 
     return NextResponse.json({ url: session.url, sessionId: session.sessionId });
   } catch (error) {

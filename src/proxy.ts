@@ -2,12 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Allowed subscription statuses that grant access.
- * Everything else (incomplete, canceled, expired, unpaid, missing) is blocked.
- */
-const ACTIVE_STATUSES = new Set(["active", "trialing"]);
-
-/**
  * Paths that are always public (no auth / subscription required).
  */
 const PUBLIC_PATHS = [
@@ -165,30 +159,12 @@ if (isPublicPage || isPublicApi) {
     return NextResponse.redirect(url);
   }
 
-// 3) Must have an ACTIVE subscription.
-  //    Subscription status lives in user.user_metadata (signed by Supabase,
-  //    populated only by verified Stripe webhooks) — NOT client-modifiable.
-  //
-  //    Billing acquisition APIs (checkout, portal, subscription, simulate)
-  //    are exempt from this requirement so a user can purchase a plan.
-  const status = (user.user_metadata as Record<string, unknown> | undefined)
-    ?.subscription_status as string | undefined;
-
-  if (!isBillingAcquisition && (!status || !ACTIVE_STATUSES.has(status))) {
-    if (isProtectedApi) {
-      return NextResponse.json(
-        {
-          error: "You need an active subscription to access AgroVision.",
-          code: "inactive_subscription",
-        },
-        { status: 403 }
-      );
-    }
-    const url = request.nextUrl.clone();
-    url.pathname = "/pricing";
-    url.search = "accessDenied=true";
-    return NextResponse.redirect(url);
-  }
+// 3) The ACTIVE SUBSCRIPTION gate is enforced by the dashboard layout
+  //    (`checkAccess()`) and the `requireApiAccess()` guard, both of which run
+  //    in the Node runtime and read the consistent subscription store.
+  //    The proxy only handles auth + email verification + redirects, so a
+  //    completed payment is recognized immediately (the Edge proxy cannot
+  //    share the in-memory subscription store with the Node webhook).
 
   // Redirect logged-in users away from auth pages
   if (
