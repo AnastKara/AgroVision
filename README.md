@@ -39,9 +39,9 @@
 
 ##  Overview
 
-AgroVision turns scattered farm data — satellite imagery, weather, soil probes, machinery logs, and ledgers — into a single, decision-grade platform. Built on **Next.js 16 (App Router)** with React 19 and TypeScript, it pairs a **Supabase**-backed data layer with **Stripe** subscription billing and **Resend** transactional email, and ships with an AI agronomy assistant, NDVI analytics, IoT sensor integrations, and a fully responsive, themeable, installable **(PWA)** interface.
+AgroVision turns scattered farm data, satellite imagery, weather, soil probes, machinery logs, and ledgers into a single, decision-grade platform. Built on **Next.js 16 (App Router)** with React 19 and TypeScript, it pairs a **Supabase**-backed data layer with **Stripe** subscription billing and **Resend** transactional email, and ships with an AI agronomy assistant, NDVI analytics, IoT sensor integrations, and a fully responsive, themeable, installable **(PWA)** interface.
 
-**Every external integration is optional.** When an API key is not configured, AgroVision gracefully falls back to realistic mock data — so the complete product experience is explorable from your very first `npm run dev`, with zero setup required.
+**Every external integration is optional.** When an API key is not configured, AgroVision gracefully falls back to realistic mock data so the complete product experience is explorable from your very first `npm run dev`, with zero setup required.
 
 ##  Features
 
@@ -96,7 +96,7 @@ AgroVision ships with a complete, modular dashboard. Each module is built on top
 | **AI**                     | Natural-language assistant that answers questions about your farm data.           |
 | **Analytics**              | Revenue/expenses, net profit, yearly trends, and exportable reports.              |
 | **Finance**                | Budgeting and expense tracking with detailed reporting.                           |
-| **Machinery**              | Fleet management — hours, fuel, maintenance, and assignments.                     |
+| **Machinery**              | Fleet managemen hours, fuel, maintenance, and assignments.                     |
 | **Workers**                | Team directory with roles and contact details.                                    |
 | **Tasks**                  | Drag-and-drop task boards to keep operations moving.                              |
 | **Calendar**               | Farm activities and scheduling in one view.                                       |
@@ -140,7 +140,7 @@ Three subscription tiers, billed monthly or yearly, managed end-to-end through S
 
 ##  Architecture
 
-AgroVision is a full-stack application built on the Next.js App Router. Server components render the dashboard shells, while route handlers under `src/app/api` act as a single origin — they protect integration keys, enforce **authentication and plan gates**, and proxy third-party services. Supabase handles authentication and data persistence, Stripe reconciles subscriptions through a dedicated Edge Function webhook, and a provider-based composable UI layer keeps the experience consistent across every module.
+AgroVision is a full-stack application built on the Next.js App Router. Server components render the dashboard shells, while route handlers under `src/app/api` act as a single origin they protect integration keys, enforce **authentication and plan gates**, and proxy third-party services. Supabase handles authentication and data persistence, Stripe reconciles subscriptions through a dedicated Edge Function webhook, and a provider-based composable UI layer keeps the experience consistent across every module.
 
 ```
 agrovizion/
@@ -244,7 +244,7 @@ Copy `.env.example` to `.env.local` and fill in the values you need. **All varia
 | `RESEND_API_KEY`                            | Opt.     | Resend API key for transactional email                 |
 | `EMAIL_FROM`                                | Opt.     | Sender address for outgoing email                      |
 
-## 🔌 Integrations
+##  Integrations
 
 | Service           | Role                                                            | Used When                                      |
 | ----------------- | --------------------------------------------------------------- | ---------------------------------------------- |
@@ -256,7 +256,7 @@ Copy `.env.example` to `.env.local` and fill in the values you need. **All varia
 | **Leaflet / EOX** | Satellite & street basemap tiles                                | Always (with graceful fallbacks)               |
 | **LibreTranslate**| On-the-fly translation for non-English locales                  | Language switch used                           |
 
-## 📡 API Routes
+##  API Routes
 
 All handlers live under `src/app/api` and share the same auth, feature-gate, and error-handling conventions.
 
@@ -279,7 +279,7 @@ All handlers live under `src/app/api` and share the same auth, feature-gate, and
 
 ##  Live Demo
 
-The landing page includes a cinematically animated **"Watch Demo"** walkthrough. It showcases realistic mockups of the real AgroVision screens — Dashboard, Farm Map, Weather, IoT Sensors, AI Assistant, and Analytics — with a continuous Ken Burns camera effect, play/pause, a progress bar, and prev/next controls. No account or API keys required.
+The landing page includes a cinematically animated **"Watch Demo"** walkthrough. It showcases realistic mockups of the real AgroVision screens Dashboard, Farm Map, Weather, IoT Sensors, AI Assistant, and Analytics with a continuous Ken Burns camera effect, play/pause, a progress bar, and prev/next controls. No account or API keys required.
 
 ##  Contributing
 
@@ -289,8 +289,6 @@ AgroVision is under active development. Contributions that improve reliability, 
 2. Follow the existing code conventions (TypeScript, ESLint, and the provider-component patterns).
 3. Run `npm run lint` and `npm run build` before opening a pull request.
 4. Reference the relevant issue or feature in your PR description.
-
-The repository also tracks current work in `TODO.md` — a great starting point for your first contribution.
 
 ##  License
 
