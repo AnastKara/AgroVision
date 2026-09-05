@@ -1,4 +1,4 @@
-# 🌱 AgroVision
+#  AgroVision
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5d5f224b-1f19-46cd-9587-6fb53cca812e" alt="AgroVision — The Digital Twin of Your Farm" width="100%" />
@@ -37,44 +37,44 @@
 
 ---
 
-## 📖 Overview
+##  Overview
 
 AgroVision turns scattered farm data — satellite imagery, weather, soil probes, machinery logs, and ledgers — into a single, decision-grade platform. Built on **Next.js 16 (App Router)** with React 19 and TypeScript, it pairs a **Supabase**-backed data layer with **Stripe** subscription billing and **Resend** transactional email, and ships with an AI agronomy assistant, NDVI analytics, IoT sensor integrations, and a fully responsive, themeable, installable **(PWA)** interface.
 
 **Every external integration is optional.** When an API key is not configured, AgroVision gracefully falls back to realistic mock data — so the complete product experience is explorable from your very first `npm run dev`, with zero setup required.
 
-## ✨ Features
+##  Features
 
-### 🗺️ Farm Map & Field Management
+###  Farm Map & Field Management
 - **Interactive satellite map** (Leaflet) with field boundaries and crop overlays.
 - **Field management tools** — create fields, draw editable polygons directly on the map, or import GPS coordinates.
 - **Per-field crop intelligence** — track crop health, soil moisture, nitrogen, and expected yield.
 - **NDVI vegetation analytics** — monitor crop vigor over time and flag areas of concern.
 
-### 🌦️ Weather Intelligence
+###  Weather Intelligence
 - **Hyper-local multi-day forecasts** backed by AgroMonitoring with an OpenWeatherMap fallback.
 - **Soil moisture monitoring by depth** (10 cm–100 cm) to guide irrigation decisions.
 - **Crop weather insights** — precipitation outlook, wind/humidity summaries, and recommended spraying/irrigation windows.
 
-### 📡 IoT Sensor Integration
+###  IoT Sensor Integration
 - **Plug-and-play connectivity** with major IoT sensor providers (soil probes, weather stations, irrigation valves).
 - **Live sensor dashboards** with real-time readings, status, and alerting.
 - **AI-generated insights** over streaming sensor data.
 
-### 🤖 AI Farming Assistant
+###  AI Farming Assistant
 - **Natural-language chat** over your farm data.
 - **Actionable recommendations** for irrigation, fertilization, pest control, and yield optimization.
 
-### 📊 Analytics & Finance
+###  Analytics & Finance
 - **Revenue vs. expenses tracking** with interactive charts built on Recharts.
 - **Advanced analytics** — income, expenses, net profit, and yearly trends.
 - **Exportable reports** and a financial dashboard designed for planning.
 
-### 🚜 Operations Suite
+###  Operations Suite
 - **Machinery & fleet management** — track hours, fuel, maintenance, and assignments.
 - **Workers, tasks, calendar, inventory, notifications, and livestock** — one unified operations dashboard.
 
-### 🛡️ Platform Foundation
+###  Platform Foundation
 - **Full auth lifecycle** — registration, login, email verification, and password reset.
 - **Subscription billing** — three plans, monthly/yearly billing, invoices, and Stripe webhooks.
 - **11 languages** — English, Español, Français, Deutsch, Italiano, Português, Nederlands, العربية, Ελληνικά, 中文, 日本語.
@@ -82,7 +82,7 @@ AgroVision turns scattered farm data — satellite imagery, weather, soil probes
 - **PWA-ready** — offline caching, installable manifest, and app shortcuts.
 - **SaaS feature-gating** — capability flags and plan limits drive the UI on a per-account basis.
 
-## 🖥️ Dashboard Modules
+##  Dashboard Modules
 
 AgroVision ships with a complete, modular dashboard. Each module is built on top of the same design system and feature-gating layer.
 
@@ -108,7 +108,7 @@ AgroVision ships with a complete, modular dashboard. Each module is built on top
 | **Settings**               | Profile, language, theme, currency, and units.                                    |
 | **Pricing**                | Public pricing page with plan comparison and checkout.                            |
 
-## 💳 Plans and Pricing
+##  Plans and Pricing
 
 Three subscription tiers, billed monthly or yearly, managed end-to-end through Stripe.
 
@@ -120,7 +120,7 @@ Three subscription tiers, billed monthly or yearly, managed end-to-end through S
 
 > A **demo/simulation endpoint** (`/api/billing/simulate`) makes it easy to exercise the full billing lifecycle during development.
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer            | Technology                                                                 |
 | ---------------- | -------------------------------------------------------------------------- |
@@ -138,7 +138,7 @@ Three subscription tiers, billed monthly or yearly, managed end-to-end through S
 | **i18n**         | [i18next](https://www.i18next.com) + `react-i18next` (11 languages, LibreTranslate fallback) |
 | **PWA**          | Custom service worker (`public/sw.js`) + generated web manifest             |
 
-## 🏗️ Architecture
+##  Architecture
 
 AgroVision is a full-stack application built on the Next.js App Router. Server components render the dashboard shells, while route handlers under `src/app/api` act as a single origin — they protect integration keys, enforce **authentication and plan gates**, and proxy third-party services. Supabase handles authentication and data persistence, Stripe reconciles subscriptions through a dedicated Edge Function webhook, and a provider-based composable UI layer keeps the experience consistent across every module.
 
@@ -186,7 +186,7 @@ agrovizion/
 └── tsconfig.json
 ```
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -223,7 +223,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser. The app r
 | `npm start`     | Start the production server                |
 | `npm run lint`  | Run ESLint across the codebase             |
 
-## 📦 Environment Variables
+##  Environment Variables
 
 Copy `.env.example` to `.env.local` and fill in the values you need. **All variables are optional** — the app falls back to demo data for any service that is not configured.
 
@@ -277,11 +277,11 @@ All handlers live under `src/app/api` and share the same auth, feature-gate, and
 | `POST /api/billing/portal`                             | Stripe customer portal session             |
 | `POST /api/billing/simulate`                           | Simulate billing states (development)      |
 
-## 🎬 Live Demo
+##  Live Demo
 
 The landing page includes a cinematically animated **"Watch Demo"** walkthrough. It showcases realistic mockups of the real AgroVision screens — Dashboard, Farm Map, Weather, IoT Sensors, AI Assistant, and Analytics — with a continuous Ken Burns camera effect, play/pause, a progress bar, and prev/next controls. No account or API keys required.
 
-## 🤝 Contributing
+##  Contributing
 
 AgroVision is under active development. Contributions that improve reliability, documentation, or the developer experience are welcome.
 
@@ -292,7 +292,7 @@ AgroVision is under active development. Contributions that improve reliability, 
 
 The repository also tracks current work in `TODO.md` — a great starting point for your first contribution.
 
-## 📄 License
+##  License
 
 This project is proprietary software. All rights reserved. © 2024 AgroVision.
 
