@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { notifications } from "@/lib/data";
 import {
   Bell,
@@ -12,14 +11,13 @@ import {
   AlertTriangle,
   CloudRain,
   Bug,
-  Droplets,
   CheckCircle,
   Wrench,
-  Sprout,
   Trash2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const notificationIcons: Record<string, any> = {
+const notificationIcons: Record<string, LucideIcon> = {
   weather: CloudRain,
   alert: Bug,
   warning: AlertTriangle,
@@ -152,7 +150,7 @@ export default function NotificationsPage() {
               <Bell size={40} className="mx-auto text-muted-foreground/30 mb-4" />
               <p className="text-muted-foreground font-medium">No notifications</p>
               <p className="text-sm text-muted-foreground/60 mt-1">
-                You're all caught up!
+                {"You're all caught up!"}
               </p>
             </div>
           )}

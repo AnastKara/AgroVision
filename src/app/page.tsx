@@ -655,8 +655,7 @@ const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
             <motion.div variants={fadeInUp} className="glass-card glass-solid p-8 text-center">
               <Heart size={24} className="mx-auto mb-4 text-primary" />
               <p className="text-lg md:text-xl font-medium leading-relaxed max-w-3xl mx-auto">
-"Agrovision is more than just a project it is my mission to connect technology with
-                agriculture and create solutions that improve the way we grow food."
+                {"\"Agrovision is more than just a project it is my mission to connect technology with agriculture and create solutions that improve the way we grow food.\""}
               </p>
               <p className="text-sm text-muted-foreground mt-4">Anastasios Karaivazoglou, Founder of AgroVision</p>
             </motion.div>

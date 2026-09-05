@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
-import { Bot, Send, X, MessageSquare, Lightbulb, Sprout, Droplets, Bug, TrendingUp } from "lucide-react";
+import { Bot, Send, Lightbulb, Droplets, Bug, TrendingUp } from "lucide-react";
 
 interface Message {
   id: string;
@@ -51,7 +51,7 @@ export default function AIPage() {
     if (!text) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: "user",
       content: text,
       timestamp: new Date(),
@@ -79,7 +79,7 @@ export default function AIPage() {
       }
 
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: "assistant",
         content: response,
         timestamp: new Date(),

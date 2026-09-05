@@ -29,6 +29,7 @@ import {
   CloudRain,
   Wind,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { tasks, transactions, notifications, weatherData as mockWeatherData, analyticsData } from "@/lib/data";
 import type { Field } from "@/lib/data";
 import { getFields } from "@/lib/fields-service";
@@ -49,7 +50,7 @@ const containerVariants = {
   },
 };
 
-const weatherIcons: Record<string, any> = {
+const weatherIcons: Record<string, LucideIcon> = {
   Sunny: Sun,
   "Partly Cloudy": Cloud,
   Rainy: CloudRain,
@@ -57,7 +58,7 @@ const weatherIcons: Record<string, any> = {
   Cloudy: Cloud,
 };
 
-const taskTypeIcons: Record<string, any> = {
+const taskTypeIcons: Record<string, LucideIcon> = {
   Irrigation: Droplets,
   Harvesting: Sprout,
   Fertilizing: Sprout,
@@ -138,7 +139,7 @@ export default function DashboardPage() {
       <motion.div variants={fadeInUp}>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back, Alex. Here's your farm overview.
+          {"Welcome back, Alex. Here's your farm overview."}
         </p>
       </motion.div>
 
